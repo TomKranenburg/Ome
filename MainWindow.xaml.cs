@@ -12,23 +12,23 @@ namespace Ome
 {
     public partial class MainWindow : Window
     {
-        private string SoundFolderPath; // Will be set dynamically to the current working directory or "Audio" folder
+        private string SoundFolderPath;
         private Dictionary<string, WaveOutEvent> PlayingSounds = new Dictionary<string, WaveOutEvent>();
         private Dictionary<string, LoopStream> LoopStreams = new Dictionary<string, LoopStream>();
         private Dictionary<string, AudioFileReader> AudioReaders = new Dictionary<string, AudioFileReader>();
         private Dictionary<string, double> TrackVolumes = new Dictionary<string, double>();
-        private Dictionary<string, Slider> VolumeSliders = new Dictionary<string, Slider>(); // Store slider references
-        private Dictionary<string, ToggleButton> PlayToggleButtons = new Dictionary<string, ToggleButton>(); // Store toggle button references
-        public string ConfigFilePath;  // Config file path for loading/saving configurations
+        private Dictionary<string, Slider> VolumeSliders = new Dictionary<string, Slider>();
+        private Dictionary<string, ToggleButton> PlayToggleButtons = new Dictionary<string, ToggleButton>();
+
+        public string ConfigFilePath;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // Set the SoundFolderPath to the current working directory
+            // Set the folder path for the audio files
             SetSoundFolderPath();
 
-            // Load configuration and folder path if provided as arguments
             var args = Environment.GetCommandLineArgs();
             if (args.Length > 1)
             {
@@ -36,7 +36,6 @@ namespace Ome
                 LoadConfiguration(ConfigFilePath);
             }
 
-            // Check if the application should start minimized
             if (args.Length > 1 && args.Contains("--minimized"))
             {
                 this.WindowState = WindowState.Minimized;
@@ -44,28 +43,25 @@ namespace Ome
 
             LoadSoundButtons();
 
-            // Adjust the window height and width dynamically after loading the buttons
             AdjustWindowHeight();
             AdjustWindowWidth();
         }
 
         private void SetSoundFolderPath()
         {
-            // Get the current working directory of the executable
             string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             SoundFolderPath = currentDirectory;
 
-            // Check if there are .flac files in the current directory
             var flacFiles = Directory.GetFiles(SoundFolderPath, "*.flac");
+            var mp3Files = Directory.GetFiles(SoundFolderPath, "*.mp3");
+            var wavFiles = Directory.GetFiles(SoundFolderPath, "*.wav");
 
-            // If no .flac files are found, check in the "Audio" folder within the current directory
-            if (flacFiles.Length == 0)
+            if (flacFiles.Length == 0 && mp3Files.Length == 0 && wavFiles.Length == 0)
             {
                 string audioFolder = Path.Combine(currentDirectory, "Audio");
                 if (Directory.Exists(audioFolder))
                 {
                     SoundFolderPath = audioFolder;
-                    flacFiles = Directory.GetFiles(SoundFolderPath, "*.flac");
                 }
             }
         }
@@ -77,40 +73,37 @@ namespace Ome
                 return;
             }
 
-            var FlacFiles = Directory.GetFiles(SoundFolderPath, "*.flac");
-            foreach (var FlacFile in FlacFiles)
-            {
-                var FileName = System.IO.Path.GetFileNameWithoutExtension(FlacFile);
+            var audioFiles = new List<string>();
+            audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.flac"));
+            audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.mp3"));
+            audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.wav"));
 
-                // Create a StackPanel to hold the label, toggle button, and slider
+            foreach (var audioFile in audioFiles)
+            {
+                var FileName = System.IO.Path.GetFileNameWithoutExtension(audioFile);
+
                 var StackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
 
-                // Create a Label for the file name
                 var FileLabel = new Label { Content = FileName, Foreground = Brushes.White, Width = 150, Margin = new Thickness(5) };
                 StackPanel.Children.Add(FileLabel);
 
-                // Create a Play/Stop toggle button
-                var PlayToggleButton = new ToggleButton { Content = "Play", Tag = FlacFile, Width = 75, Margin = new Thickness(5) };
+                var PlayToggleButton = new ToggleButton { Content = "Play", Tag = audioFile, Width = 75, Margin = new Thickness(5) };
                 PlayToggleButton.Checked += PlayToggleButton_Checked;
                 PlayToggleButton.Unchecked += PlayToggleButton_Unchecked;
                 StackPanel.Children.Add(PlayToggleButton);
 
-                // Store the toggle button reference for later use
-                PlayToggleButtons[FlacFile] = PlayToggleButton;
+                PlayToggleButtons[audioFile] = PlayToggleButton;
 
-                // Create a Volume slider
                 var VolumeSlider = new Slider { Minimum = 0, Maximum = 1, Value = 0.5, Width = 100, Margin = new Thickness(5) };
-                VolumeSlider.Tag = FlacFile;
+                VolumeSlider.Tag = audioFile;
                 VolumeSlider.ValueChanged += VolumeSlider_ValueChanged;
                 StackPanel.Children.Add(VolumeSlider);
 
-                // Store the slider reference for later use
-                VolumeSliders[FlacFile] = VolumeSlider;
+                VolumeSliders[audioFile] = VolumeSlider;
 
-                // Check if a volume was previously set for this file
-                if (TrackVolumes.ContainsKey(FlacFile))
+                if (TrackVolumes.ContainsKey(audioFile))
                 {
-                    VolumeSlider.Value = TrackVolumes[FlacFile];
+                    VolumeSlider.Value = TrackVolumes[audioFile];
                 }
 
                 ButtonsPanel.Children.Add(StackPanel);
@@ -119,26 +112,21 @@ namespace Ome
 
         private void AdjustWindowHeight()
         {
-            // Calculate the total height needed for all track buttons
-            double trackButtonHeight = 50; // Estimated height for each track's UI (adjust as necessary)
-            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 80; // Add extra for margins and padding
+            double trackButtonHeight = 52;
+            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 80;
 
-            // Get the screen's height
             double screenHeight = SystemParameters.FullPrimaryScreenHeight;
 
-            // Set the window height, but ensure it doesn't exceed the screen height
             this.Height = Math.Min(totalHeight, screenHeight);
         }
 
         private void AdjustWindowWidth()
         {
-            // Estimate the width based on the sum of the label, button, and slider widths
-            double labelWidth = 150; // Width of the file name label
-            double buttonWidth = 75; // Width of the play/stop button
-            double sliderWidth = 150; // Width of the volume slider
-            double marginWidth = 30;  // Extra margin to make space for padding and gaps
+            double labelWidth = 150;
+            double buttonWidth = 75;
+            double sliderWidth = 150;
+            double marginWidth = 30;
 
-            // Set the total window width
             this.Width = labelWidth + buttonWidth + sliderWidth + marginWidth;
         }
 
@@ -168,16 +156,28 @@ namespace Ome
 
         private void StartSound(string FilePath)
         {
-            var Reader = new AudioFileReader(FilePath);
+            AudioFileReader Reader;
+            if (FilePath.EndsWith(".wav"))
+            {
+                Reader = new AudioFileReader(FilePath); // WAV files are directly supported
+            }
+            else if (FilePath.EndsWith(".mp3"))
+            {
+                Reader = new AudioFileReader(FilePath); // MP3 is supported via AudioFileReader
+            }
+            else // Default case, also covers .flac
+            {
+                Reader = new AudioFileReader(FilePath);
+            }
+
             AudioReaders[FilePath] = Reader;
 
-            // Set the volume to the previously saved value if it exists
             if (TrackVolumes.ContainsKey(FilePath))
             {
                 Reader.Volume = (float)TrackVolumes[FilePath];
             }
 
-            var Loop = new LoopStream(Reader); // Custom loop stream to enable looping
+            var Loop = new LoopStream(Reader);
             var OutputDevice = new WaveOutEvent();
             OutputDevice.Init(Loop);
             OutputDevice.Play();
@@ -216,7 +216,7 @@ namespace Ome
             if (AudioReaders.ContainsKey(FilePath))
             {
                 AudioReaders[FilePath].Volume = (float)Slider.Value;
-                TrackVolumes[FilePath] = Slider.Value; // Save the volume for future use
+                TrackVolumes[FilePath] = Slider.Value;
             }
         }
 
@@ -241,7 +241,6 @@ namespace Ome
                 });
             }
 
-            // Save window location and dimensions
             var windowConfig = new WindowConfig
             {
                 Width = this.Width,
@@ -269,7 +268,6 @@ namespace Ome
 
             if (configData != null)
             {
-                // Reset all buttons and sliders to default values
                 foreach (var toggleButton in PlayToggleButtons.Values)
                 {
                     toggleButton.IsChecked = false;
@@ -278,16 +276,14 @@ namespace Ome
 
                 foreach (var slider in VolumeSliders.Values)
                 {
-                    slider.Value = 0.5; // Default volume value
+                    slider.Value = 0.5;
                 }
 
-                // Stop all currently playing sounds
                 foreach (var track in new List<string>(PlayingSounds.Keys))
                 {
                     StopSound(track);
                 }
 
-                // Load window location and dimensions
                 this.Width = configData.Window.Width;
                 this.Height = configData.Window.Height;
                 this.Left = configData.Window.Left;
@@ -297,13 +293,11 @@ namespace Ome
                 {
                     TrackVolumes[trackConfig.FilePath] = trackConfig.Volume;
 
-                    // Restore volume slider position
                     if (VolumeSliders.ContainsKey(trackConfig.FilePath))
                     {
                         VolumeSliders[trackConfig.FilePath].Value = trackConfig.Volume;
                     }
 
-                    // Restore play state and toggle button state
                     if (trackConfig.IsPlaying)
                     {
                         StartSound(trackConfig.FilePath);
@@ -313,21 +307,12 @@ namespace Ome
                             PlayToggleButtons[trackConfig.FilePath].Content = "Stop";
                         }
                     }
-                    else
-                    {
-                        if (PlayToggleButtons.ContainsKey(trackConfig.FilePath))
-                        {
-                            PlayToggleButtons[trackConfig.FilePath].IsChecked = false;
-                            PlayToggleButtons[trackConfig.FilePath].Content = "Play";
-                        }
-                    }
                 }
             }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            // Ensure all sounds are stopped and disposed of when the window is closed
             foreach (var Sound in PlayingSounds.Values)
             {
                 Sound.Stop();
@@ -344,7 +329,6 @@ namespace Ome
                 Reader.Dispose();
             }
 
-            // Save the configuration automatically if a config file path is provided
             if (!string.IsNullOrEmpty(ConfigFilePath))
             {
                 SaveConfiguration(ConfigFilePath);
@@ -373,7 +357,6 @@ namespace Ome
         public WindowConfig Window { get; set; }
     }
 
-    // Custom loop stream class to enable looping
     public class LoopStream : WaveStream
     {
         private readonly WaveStream SourceStream;
@@ -404,9 +387,9 @@ namespace Ome
                 {
                     if (SourceStream.Position == 0 || SourceStream.Position == SourceStream.Length)
                     {
-                        break; // reached end of stream or not started yet
+                        break; // End of stream
                     }
-                    SourceStream.Position = 0;
+                    SourceStream.Position = 0; // Loop the audio
                 }
                 totalBytesRead += bytesRead;
             }
