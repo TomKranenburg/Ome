@@ -21,6 +21,7 @@ namespace Ome
         private Dictionary<string, ToggleButton> PlayToggleButtons = new Dictionary<string, ToggleButton>();
 
         public string ConfigFilePath;
+        private double GlobalVolume = 0.5;  // Default global volume level (50%)
 
         public MainWindow()
         {
@@ -122,6 +123,25 @@ namespace Ome
         }
 
         /// <summary>
+        /// Event handler for the global volume slider. Updates the volume for all tracks.
+        /// </summary>
+        private void GlobalVolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            GlobalVolume = GlobalVolumeSlider.Value;  // Update the global volume value
+
+            // Update the volume of all currently playing tracks
+            foreach (var filePath in AudioReaders.Keys)
+            {
+                // Check if the file path exists in both TrackVolumes and AudioReaders
+                if (TrackVolumes.ContainsKey(filePath) && AudioReaders.ContainsKey(filePath))
+                {
+                    // Adjust the volume by multiplying the individual track volume by the global volume
+                    AudioReaders[filePath].Volume = (float)(TrackVolumes[filePath] * GlobalVolume);
+                }
+            }
+        }
+
+        /// <summary>
         /// Event handler for the Play/Pause toggle button.
         /// </summary>
         private void PlayPauseToggleButton_Click(object sender, RoutedEventArgs e)
@@ -212,7 +232,10 @@ namespace Ome
                 {
                     VolumeSlider.Value = TrackVolumes[audioFile];
                 }
-
+                else
+                {
+                    TrackVolumes[audioFile] = 0.5;
+                }
                 ButtonsPanel.Children.Add(StackPanel);
             }
         }
@@ -279,12 +302,12 @@ namespace Ome
         private void StartSound(string FilePath)
         {
             AudioFileReader Reader = new AudioFileReader(FilePath);
-
             AudioReaders[FilePath] = Reader;
 
+            // Set the volume to the track volume multiplied by the global volume
             if (TrackVolumes.ContainsKey(FilePath))
             {
-                Reader.Volume = (float)TrackVolumes[FilePath];
+                Reader.Volume = (float)(TrackVolumes[FilePath] * GlobalVolume);
             }
 
             var Loop = new LoopStream(Reader);
@@ -322,7 +345,7 @@ namespace Ome
         }
 
         /// <summary>
-        /// Event handler for the volume slider. Updates the volume of the playing audio.
+        /// Event handler for the volume slider of each track. Updates the volume for that specific track.
         /// </summary>
         private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -331,8 +354,8 @@ namespace Ome
 
             if (AudioReaders.ContainsKey(FilePath))
             {
-                AudioReaders[FilePath].Volume = (float)Slider.Value;
-                TrackVolumes[FilePath] = Slider.Value;
+                TrackVolumes[FilePath] = Slider.Value;  // Save the individual track volume
+                AudioReaders[FilePath].Volume = (float)(Slider.Value * GlobalVolume);  // Update track volume based on global volume
             }
         }
 

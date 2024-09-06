@@ -7,64 +7,16 @@
         <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Horizontal" Margin="10">
             <!-- Reset Button (Left of Menu Button) -->
             <Button Content="" Width="60" Height="60" Click="ResetButton_Click" BorderBrush="Black" Focusable="False">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="OverridesDefaultStyle" Value="True"/>
-                        <Setter Property="Background">
-                            <Setter.Value>
-                                <ImageBrush ImageSource="/reset.png"/>
-                            </Setter.Value>
-                        </Setter>
-                        <Setter Property="BorderBrush" Value="Black"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"/>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <!-- Trigger for mouse-over to dim the button -->
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Opacity" Value="0.7"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="False">
-                                <Setter Property="Opacity" Value="1"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
+                <Button.Background>
+                    <ImageBrush ImageSource="/reset.png"/>
+                </Button.Background>
             </Button>
 
             <!-- Menu Button -->
             <Button Content="" Width="60" Height="60" Click="MenuButton_Click" BorderBrush="Black" Focusable="False">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="OverridesDefaultStyle" Value="True"/>
-                        <Setter Property="Background">
-                            <Setter.Value>
-                                <ImageBrush ImageSource="/menu.png"/>
-                            </Setter.Value>
-                        </Setter>
-                        <Setter Property="BorderBrush" Value="Black"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"/>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <!-- Trigger for mouse-over to dim the button -->
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Opacity" Value="0.7"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="False">
-                                <Setter Property="Opacity" Value="1"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
+                <Button.Background>
+                    <ImageBrush ImageSource="/menu.png"/>
+                </Button.Background>
             </Button>
 
             <!-- Play/Pause Toggle Button (Right of Menu Button) -->
@@ -101,17 +53,15 @@
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
-                            <!-- Trigger for mouse-over to dim the button -->
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Opacity" Value="0.7"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="False">
-                                <Setter Property="Opacity" Value="1"/>
-                            </Trigger>
                         </Style.Triggers>
                     </Style>
                 </ToggleButton.Style>
             </ToggleButton>
+        </StackPanel>
+
+        <!-- Global Volume Slider (Centred Under Menu Button) -->
+        <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Vertical" Margin="10">
+            <Slider Name="GlobalVolumeSlider" Minimum="0" Maximum="1" Value="0.5" Width="300" ValueChanged="GlobalVolumeSlider_ValueChanged" />
         </StackPanel>
 
         <!-- Main content area for sound buttons -->
