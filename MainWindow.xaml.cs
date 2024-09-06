@@ -25,56 +25,43 @@ namespace Ome
         public MainWindow()
         {
             InitializeComponent();
-
-            // Set the folder path for the audio files
             SetSoundFolderPath();
 
             var args = Environment.GetCommandLineArgs();
+            HandleCommandLineArgs(args);
+
+            LoadSoundButtons();
+            AdjustWindowHeight();
+            AdjustWindowWidth();
+        }
+
+        /// <summary>
+        /// Handles command-line arguments passed to the application.
+        /// </summary>
+        /// <param name="args">The command-line arguments.</param>
+        public void HandleCommandLineArgs(string[] args)
+        {
             if (args.Length > 1)
             {
                 ConfigFilePath = args[1];
                 LoadConfiguration(ConfigFilePath);
             }
 
-            if (args.Length > 1 && args.Contains("--minimized"))
+            if (args.Contains("--minimize"))
             {
                 this.WindowState = WindowState.Minimized;
             }
 
-            LoadSoundButtons();
-
-            AdjustWindowHeight();
-            AdjustWindowWidth();
+            if (args.Length > 2)
+            {
+                SoundFolderPath = args[2];
+                LoadSoundButtons();  // Reload the sound buttons if the folder changes
+            }
         }
 
         /// <summary>
-        /// Resets all tracks by stopping playback and setting volume sliders to default.
+        /// Sets the folder path for audio files, checking the current directory and the "Audio" folder.
         /// </summary>
-        public void ResetAllTracks()
-        {
-            // Stop all currently playing sounds
-            foreach (var track in new List<string>(PlayingSounds.Keys))
-            {
-                StopSound(track);
-            }
-
-            // Reset all toggle buttons to "Play" state
-            foreach (var toggleButton in PlayToggleButtons.Values)
-            {
-                toggleButton.IsChecked = false;
-                toggleButton.Content = "Play";
-            }
-
-            // Reset all volume sliders to default value (0.5)
-            foreach (var slider in VolumeSliders.Values)
-            {
-                slider.Value = 0.5;
-            }
-
-            // Clear the volumes from the dictionary (reset them)
-            TrackVolumes.Clear();
-        }
-
         private void SetSoundFolderPath()
         {
             string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -94,12 +81,14 @@ namespace Ome
             }
         }
 
+        /// <summary>
+        /// Loads the audio files (flac, mp3, wav) into the UI as buttons with volume sliders.
+        /// </summary>
         private void LoadSoundButtons()
         {
-            if (!Directory.Exists(SoundFolderPath))
-            {
-                return;
-            }
+            if (!Directory.Exists(SoundFolderPath)) return;
+
+            ButtonsPanel.Children.Clear(); // Clear existing buttons before reloading
 
             var audioFiles = new List<string>();
             audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.flac"));
@@ -138,6 +127,9 @@ namespace Ome
             }
         }
 
+        /// <summary>
+        /// Adjusts the window height based on the number of tracks loaded.
+        /// </summary>
         private void AdjustWindowHeight()
         {
             double trackButtonHeight = 52;
@@ -148,6 +140,9 @@ namespace Ome
             this.Height = Math.Min(totalHeight, screenHeight);
         }
 
+        /// <summary>
+        /// Adjusts the window width to fit the audio track buttons and controls.
+        /// </summary>
         private void AdjustWindowWidth()
         {
             double labelWidth = 150;
@@ -158,6 +153,9 @@ namespace Ome
             this.Width = labelWidth + buttonWidth + sliderWidth + marginWidth;
         }
 
+        /// <summary>
+        /// Event handler for the Play/Stop toggle button. Starts playback when checked.
+        /// </summary>
         private void PlayToggleButton_Checked(object sender, RoutedEventArgs e)
         {
             var Button = sender as ToggleButton;
@@ -170,6 +168,9 @@ namespace Ome
             }
         }
 
+        /// <summary>
+        /// Event handler for the Play/Stop toggle button. Stops playback when unchecked.
+        /// </summary>
         private void PlayToggleButton_Unchecked(object sender, RoutedEventArgs e)
         {
             var Button = sender as ToggleButton;
@@ -182,21 +183,12 @@ namespace Ome
             }
         }
 
+        /// <summary>
+        /// Starts playing an audio file.
+        /// </summary>
         private void StartSound(string FilePath)
         {
-            AudioFileReader Reader;
-            if (FilePath.EndsWith(".wav"))
-            {
-                Reader = new AudioFileReader(FilePath); // WAV files are directly supported
-            }
-            else if (FilePath.EndsWith(".mp3"))
-            {
-                Reader = new AudioFileReader(FilePath); // MP3 is supported via AudioFileReader
-            }
-            else // Default case, also covers .flac
-            {
-                Reader = new AudioFileReader(FilePath);
-            }
+            AudioFileReader Reader = new AudioFileReader(FilePath);
 
             AudioReaders[FilePath] = Reader;
 
@@ -214,6 +206,9 @@ namespace Ome
             LoopStreams[FilePath] = Loop;
         }
 
+        /// <summary>
+        /// Stops playing an audio file.
+        /// </summary>
         private void StopSound(string FilePath)
         {
             if (PlayingSounds.ContainsKey(FilePath))
@@ -236,6 +231,9 @@ namespace Ome
             }
         }
 
+        /// <summary>
+        /// Event handler for the volume slider. Updates the volume of the playing audio.
+        /// </summary>
         private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             var Slider = sender as Slider;
@@ -248,13 +246,9 @@ namespace Ome
             }
         }
 
-        private void MenuButton_Click(object sender, RoutedEventArgs e)
-        {
-            var configWindow = new ConfigWindow();
-            configWindow.Owner = this;
-            configWindow.ShowDialog();
-        }
-
+        /// <summary>
+        /// Saves the current configuration (track volumes, window size, play states) to a file.
+        /// </summary>
         public void SaveConfiguration(string filePath)
         {
             var config = new List<TrackConfig>();
@@ -287,6 +281,9 @@ namespace Ome
             File.WriteAllText(filePath, json);
         }
 
+        /// <summary>
+        /// Loads a saved configuration (track volumes, window size, play states) from a file.
+        /// </summary>
         public void LoadConfiguration(string filePath)
         {
             if (!File.Exists(filePath)) return;
@@ -339,6 +336,9 @@ namespace Ome
             }
         }
 
+        /// <summary>
+        /// Stops all audio playback and disposes of resources when the window is closing.
+        /// </summary>
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             foreach (var Sound in PlayingSounds.Values)
@@ -361,6 +361,40 @@ namespace Ome
             {
                 SaveConfiguration(ConfigFilePath);
             }
+        }
+
+        /// <summary>
+        /// Resets all tracks to their default state (stops playback, resets volume).
+        /// </summary>
+        public void ResetAllTracks()
+        {
+            foreach (var track in new List<string>(PlayingSounds.Keys))
+            {
+                StopSound(track);
+            }
+
+            foreach (var toggleButton in PlayToggleButtons.Values)
+            {
+                toggleButton.IsChecked = false;
+                toggleButton.Content = "Play";
+            }
+
+            foreach (var slider in VolumeSliders.Values)
+            {
+                slider.Value = 0.5;
+            }
+
+            TrackVolumes.Clear();
+        }
+
+        /// <summary>
+        /// Event handler for the Menu button. Opens the configuration window.
+        /// </summary>
+        private void MenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            var configWindow = new ConfigWindow();
+            configWindow.Owner = this;
+            configWindow.ShowDialog();
         }
     }
 
@@ -415,9 +449,9 @@ namespace Ome
                 {
                     if (SourceStream.Position == 0 || SourceStream.Position == SourceStream.Length)
                     {
-                        break; // End of stream
+                        break;
                     }
-                    SourceStream.Position = 0; // Loop the audio
+                    SourceStream.Position = 0;
                 }
                 totalBytesRead += bytesRead;
             }
