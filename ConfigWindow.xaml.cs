@@ -11,6 +11,16 @@ namespace Ome
             InitializeComponent();
         }
 
+        // Event handler for the reset button
+        private void ResetButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Get the main window instance and call the reset method
+            if (this.Owner is MainWindow mainWindow)
+            {
+                mainWindow.ResetAllTracks();
+            }
+        }
+
         private void SaveConfigButton_Click(object sender, RoutedEventArgs e)
         {
             var saveFileDialog = new SaveFileDialog

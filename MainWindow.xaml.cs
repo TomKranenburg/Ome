@@ -47,6 +47,34 @@ namespace Ome
             AdjustWindowWidth();
         }
 
+        /// <summary>
+        /// Resets all tracks by stopping playback and setting volume sliders to default.
+        /// </summary>
+        public void ResetAllTracks()
+        {
+            // Stop all currently playing sounds
+            foreach (var track in new List<string>(PlayingSounds.Keys))
+            {
+                StopSound(track);
+            }
+
+            // Reset all toggle buttons to "Play" state
+            foreach (var toggleButton in PlayToggleButtons.Values)
+            {
+                toggleButton.IsChecked = false;
+                toggleButton.Content = "Play";
+            }
+
+            // Reset all volume sliders to default value (0.5)
+            foreach (var slider in VolumeSliders.Values)
+            {
+                slider.Value = 0.5;
+            }
+
+            // Clear the volumes from the dictionary (reset them)
+            TrackVolumes.Clear();
+        }
+
         private void SetSoundFolderPath()
         {
             string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
