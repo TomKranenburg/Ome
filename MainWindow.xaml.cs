@@ -246,7 +246,7 @@ namespace Ome
         private void AdjustWindowHeight()
         {
             double trackButtonHeight = 52;
-            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 80;
+            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 118;
 
             double screenHeight = SystemParameters.FullPrimaryScreenHeight;
 
@@ -477,15 +477,18 @@ namespace Ome
         }
 
         /// <summary>
-        /// Resets all tracks to their default state (stops playback, resets volume).
+        /// Resets all tracks to their default state (stops playback, resets volume),
+        /// and resets the global volume slider to 50%.
         /// </summary>
         public void ResetAllTracks()
         {
+            // Stop all currently playing tracks
             foreach (var track in new List<string>(PlayingSounds.Keys))
             {
                 StopSound(track);
             }
 
+            // Reset all toggle buttons and volume sliders
             foreach (var toggleButton in PlayToggleButtons.Values)
             {
                 toggleButton.IsChecked = false;
@@ -494,10 +497,16 @@ namespace Ome
 
             foreach (var slider in VolumeSliders.Values)
             {
-                slider.Value = 0.5;
+                slider.Value = 0.5;  // Reset individual track volume sliders to 50%
             }
 
+            // Clear the track volumes dictionary and reload sound buttons
             TrackVolumes.Clear();
+            LoadSoundButtons();
+
+            // Reset the global volume slider to 50%
+            GlobalVolumeSlider.Value = 0.5;
+            GlobalVolume = 0.5;
         }
 
         /// <summary>
