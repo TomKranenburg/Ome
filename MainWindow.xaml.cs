@@ -147,7 +147,7 @@ namespace Ome
         /// </summary>
         private void SetSoundFolderPath()
         {
-            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string currentDirectory = AppContext.BaseDirectory;
             SoundFolderPath = currentDirectory;
 
             var flacFiles = Directory.GetFiles(SoundFolderPath, "*.flac");
@@ -215,8 +215,8 @@ namespace Ome
         /// </summary>
         private void AdjustWindowHeight()
         {
-            double trackButtonHeight = 52;
-            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 80;
+            double trackButtonHeight = 47;
+            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 130;
 
             double screenHeight = SystemParameters.FullPrimaryScreenHeight;
 
