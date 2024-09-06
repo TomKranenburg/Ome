@@ -123,15 +123,13 @@ namespace Ome
 
             if (toggleButton.IsChecked == true)
             {
-                // If the toggle button is checked, pause all tracks and change the background to "play.png"
+                // If the toggle button is checked, pause all tracks
                 PauseAllTracks();
-
             }
             else
             {
-                // If the toggle button is unchecked, resume all tracks and change the background to "pause.png"
+                // If the toggle button is unchecked, resume all tracks
                 ResumeAllTracks();
-
             }
         }
 

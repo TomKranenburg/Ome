@@ -68,7 +68,7 @@
             </Button>
 
             <!-- Play/Pause Toggle Button (Right of Menu Button) -->
-            <ToggleButton Name="PlayPauseToggleButton" Content="" Width="60" Height="60" BorderBrush="Black" Focusable="False">
+            <ToggleButton Name="PlayPauseToggleButton" Content="" Width="60" Height="60" BorderBrush="Black" Focusable="False" Click="PlayPauseToggleButton_Click">
                 <ToggleButton.Style>
                     <Style TargetType="ToggleButton">
                         <Setter Property="OverridesDefaultStyle" Value="True"/>
