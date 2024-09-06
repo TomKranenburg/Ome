@@ -52,10 +52,64 @@ namespace Ome
                 this.WindowState = WindowState.Minimized;
             }
 
+            if (args.Contains("--pause"))
+            {
+                PauseAllTracks();
+            }
+
+            if (args.Contains("--resume"))
+            {
+                ResumeAllTracks();
+            }
+
             if (args.Length > 2)
             {
                 SoundFolderPath = args[2];
                 LoadSoundButtons();  // Reload the sound buttons if the folder changes
+            }
+        }
+
+        /// <summary>
+        /// Pauses all currently playing tracks.
+        /// </summary>
+        public void PauseAllTracks()
+        {
+            foreach (var track in new List<string>(PlayingSounds.Keys))
+            {
+                if (PlayingSounds[track].PlaybackState == PlaybackState.Playing)
+                {
+                    PlayingSounds[track].Pause();
+                }
+            }
+
+            foreach (var toggleButton in PlayToggleButtons.Values)
+            {
+                if (toggleButton.IsChecked == true)
+                {
+                    toggleButton.Content = "Resume";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Resumes all previously paused tracks.
+        /// </summary>
+        public void ResumeAllTracks()
+        {
+            foreach (var track in new List<string>(PlayingSounds.Keys))
+            {
+                if (PlayingSounds[track].PlaybackState == PlaybackState.Paused)
+                {
+                    PlayingSounds[track].Play();
+                }
+            }
+
+            foreach (var toggleButton in PlayToggleButtons.Values)
+            {
+                if (toggleButton.Content.ToString() == "Resume")
+                {
+                    toggleButton.Content = "Stop";
+                }
             }
         }
 
