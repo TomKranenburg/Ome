@@ -51,18 +51,21 @@ namespace Ome
                 LoadConfiguration(ConfigFilePath);
             }
 
-            if (args.Contains("--minimize"))
+            // Handle minimize (--minimize or -m)
+            if (args.Contains("--minimize") || args.Contains("-m"))
             {
                 // Minimize the window only after everything is loaded
                 this.WindowState = WindowState.Minimized;
             }
 
-            if (args.Contains("--pause"))
+            // Handle pause (--pause or -p)
+            if (args.Contains("--pause") || args.Contains("-p"))
             {
                 PauseAllTracks();
             }
 
-            if (args.Contains("--resume"))
+            // Handle resume (--resume or -r)
+            if (args.Contains("--resume") || args.Contains("-r"))
             {
                 ResumeAllTracks();
             }
