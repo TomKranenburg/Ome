@@ -36,6 +36,12 @@ namespace Ome
                 LoadConfiguration(ConfigFilePath);
             }
 
+            // Check if the application should start minimized
+            if (args.Length > 1 && args.Contains("--minimized"))
+            {
+                this.WindowState = WindowState.Minimized;
+            }
+
             LoadSoundButtons();
 
             // Adjust the window height and width dynamically after loading the buttons
@@ -62,19 +68,12 @@ namespace Ome
                     flacFiles = Directory.GetFiles(SoundFolderPath, "*.flac");
                 }
             }
-
-            // If no files are still found, inform the user that no sound files are detected
-            //if (flacFiles.Length == 0)
-            //{
-                //MessageBox.Show("No .flac audio files found in the current directory or 'Audio' folder.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            //}
         }
 
         private void LoadSoundButtons()
         {
             if (!Directory.Exists(SoundFolderPath))
             {
-                MessageBox.Show("Sound folder not found!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
