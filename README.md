@@ -1,4 +1,6 @@
-# Audio Playback Application Documentation
+(CAUTION: All code and documentation was written by Chat-GPT 4o)
+
+# OME Documentation
 
 ## Overview
 
