@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using Microsoft.Win32;
 
 namespace Ome
 {
@@ -11,53 +10,44 @@ namespace Ome
             InitializeComponent();
         }
 
-        // Event handler for the reset button
-        private void ResetButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Get the main window instance and call the reset method
-            if (this.Owner is MainWindow mainWindow)
-            {
-                mainWindow.ResetAllTracks();
-            }
-        }
-
-        private void SaveConfigButton_Click(object sender, RoutedEventArgs e)
-        {
-            var saveFileDialog = new SaveFileDialog
-            {
-                Filter = "JSON files (*.json)|*.json",
-                DefaultExt = "json"
-            };
-
-            if (saveFileDialog.ShowDialog() == true)
-            {
-                var mainWindow = (MainWindow)Owner;
-                mainWindow.SaveConfiguration(saveFileDialog.FileName);
-            }
-        }
-
+        // Event handler for the Load Config button
         private void LoadConfigButton_Click(object sender, RoutedEventArgs e)
         {
-            var openFileDialog = new OpenFileDialog
+            // Implement the logic for loading the configuration
+            var mainWindow = this.Owner as MainWindow;
+            if (mainWindow != null)
             {
-                Filter = "JSON files (*.json)|*.json",
-                DefaultExt = "json"
-            };
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                var mainWindow = (MainWindow)Owner;
-                mainWindow.ConfigFilePath = openFileDialog.FileName;
-                mainWindow.LoadConfiguration(mainWindow.ConfigFilePath);
-
-                // Close the menu window after loading a config
-                this.Close();
+                // Open file dialog to select config file and load it
+                Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    mainWindow.LoadConfiguration(openFileDialog.FileName);
+                    this.Close(); // Close the Config window after loading
+                }
             }
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        // Event handler for the Save Config button
+        private void SaveConfigButton_Click(object sender, RoutedEventArgs e)
         {
-            Close();
+            // Implement the logic for saving the configuration
+            var mainWindow = this.Owner as MainWindow;
+            if (mainWindow != null)
+            {
+                // Open file dialog to save config file
+                Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog();
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    mainWindow.SaveConfiguration(saveFileDialog.FileName);
+                }
+            }
+        }
+
+        // Event handler for the Exit Application button
+        private void ExitApplicationButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Exit the entire application
+            Application.Current.Shutdown();
         }
     }
 }

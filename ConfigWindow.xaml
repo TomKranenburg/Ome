@@ -1,11 +1,15 @@
 ﻿<Window x:Class="Ome.ConfigWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Configuration" Height="200" Width="300" Background="Black">
-    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Button Content="Reset Tracks" Width="100" Margin="10" Click="ResetButton_Click"/>
-        <Button Content="Save Config" Width="100" Margin="10" Click="SaveConfigButton_Click"/>
-        <Button Content="Load Config" Width="100" Margin="10" Click="LoadConfigButton_Click"/>
-        <Button Content="Close" Width="100" Margin="10" Click="CloseButton_Click"/>
+        Title="Config" Height="300" Width="300" Background="Black">
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20">
+        <!-- Load Config Button -->
+        <Button Content="Load Config" Width="150" Height="40" Click="LoadConfigButton_Click" Margin="10"/>
+
+        <!-- Save Config Button -->
+        <Button Content="Save Config" Width="150" Height="40" Click="SaveConfigButton_Click" Margin="10"/>
+
+        <!-- Exit Application Button -->
+        <Button Content="Exit Application" Width="150" Height="40" Click="ExitApplicationButton_Click" Margin="10"/>
     </StackPanel>
 </Window>
