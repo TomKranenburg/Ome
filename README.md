@@ -66,8 +66,6 @@ Ome.exe [ConfigFilePath] [SoundFolderPath] --minimized
 ```
 Ome.exe C:\configs\audio_config.json C:\Users\Music\MyFlacFiles --minimized
 ```
-- If both parameters are omitted, the application will use the current directory for audio files and will not load any pre-existing configuration.
-
 ## How the Program Functions
 
 ### 1. Loading Audio Files
