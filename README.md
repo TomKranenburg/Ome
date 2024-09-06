@@ -28,7 +28,7 @@ The main window dynamically adjusts its height and width to fit the number of au
 
 ## Command-Line Parameters
 
-The application accepts up to two optional command-line parameters:
+The application accepts up to three optional command-line parameters:
 
 ### 1. Configuration File Path
 - **Usage**:
@@ -53,6 +53,18 @@ Ome.exe [ConfigFilePath] [SoundFolderPath]
 - **Example**:
 ```
 Ome.exe C:\configs\audio_config.json C:\Users\Music\MyFlacFiles
+```
+- If both parameters are omitted, the application will use the current directory for audio files and will not load any pre-existing configuration.
+
+### 3. Start Minimised
+- **Usage**:
+```
+Ome.exe [ConfigFilePath] [SoundFolderPath] --minimized
+```
+- **Description**: This optional parameter starts the application minimized.
+- **Example**:
+```
+Ome.exe C:\configs\audio_config.json C:\Users\Music\MyFlacFiles --minimized
 ```
 - If both parameters are omitted, the application will use the current directory for audio files and will not load any pre-existing configuration.
 
