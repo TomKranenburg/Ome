@@ -7,6 +7,7 @@ using System.Windows.Media;
 using Newtonsoft.Json;
 using NAudio.Wave;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media.Imaging;
 
 namespace Ome
 {
@@ -111,6 +112,36 @@ namespace Ome
                     toggleButton.Content = "Stop";
                 }
             }
+        }
+
+        /// <summary>
+        /// Event handler for the Play/Pause toggle button.
+        /// </summary>
+        private void PlayPauseToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            var toggleButton = sender as ToggleButton;
+
+            if (toggleButton.IsChecked == true)
+            {
+                // If the toggle button is checked, pause all tracks and change the background to "play.png"
+                PauseAllTracks();
+
+            }
+            else
+            {
+                // If the toggle button is unchecked, resume all tracks and change the background to "pause.png"
+                ResumeAllTracks();
+
+            }
+        }
+
+        /// <summary>
+        /// Event handler for the Reset button.
+        /// </summary>
+        private void ResetButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Call the ResetAllTracks method to stop all playback and reset the volume sliders
+            ResetAllTracks();
         }
 
         /// <summary>

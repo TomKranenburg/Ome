@@ -3,13 +3,115 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Ome" Height="400" Width="600" MinHeight="118" Background="Black">
     <DockPanel>
-        <!-- Top Panel with Centered Menu Button -->
-        <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="10">
-            <Button Content="" Width="60" Height="60" Click="MenuButton_Click" BorderBrush="Black">
-                <Button.Background>
-                    <ImageBrush ImageSource="/menu.png"/>
-                </Button.Background>
+        <!-- Top Panel with Reset Button, Menu Button, and Play/Pause Toggle Button -->
+        <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Horizontal" Margin="10">
+            <!-- Reset Button (Left of Menu Button) -->
+            <Button Content="" Width="60" Height="60" Click="ResetButton_Click" BorderBrush="Black" Focusable="False">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="OverridesDefaultStyle" Value="True"/>
+                        <Setter Property="Background">
+                            <Setter.Value>
+                                <ImageBrush ImageSource="/reset.png"/>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="BorderBrush" Value="Black"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <!-- Trigger for mouse-over to dim the button -->
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="False">
+                                <Setter Property="Opacity" Value="1"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
             </Button>
+
+            <!-- Menu Button -->
+            <Button Content="" Width="60" Height="60" Click="MenuButton_Click" BorderBrush="Black" Focusable="False">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="OverridesDefaultStyle" Value="True"/>
+                        <Setter Property="Background">
+                            <Setter.Value>
+                                <ImageBrush ImageSource="/menu.png"/>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="BorderBrush" Value="Black"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <!-- Trigger for mouse-over to dim the button -->
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="False">
+                                <Setter Property="Opacity" Value="1"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <!-- Play/Pause Toggle Button (Right of Menu Button) -->
+            <ToggleButton Name="PlayPauseToggleButton" Content="" Width="60" Height="60" BorderBrush="Black" Focusable="False">
+                <ToggleButton.Style>
+                    <Style TargetType="ToggleButton">
+                        <Setter Property="OverridesDefaultStyle" Value="True"/>
+                        <Setter Property="Background">
+                            <Setter.Value>
+                                <ImageBrush ImageSource="/pause.png"/>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="BorderBrush" Value="Black"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <!-- Trigger to switch background image based on IsChecked state -->
+                        <Style.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <ImageBrush ImageSource="/play.png"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <ImageBrush ImageSource="/pause.png"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <!-- Trigger for mouse-over to dim the button -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="False">
+                                <Setter Property="Opacity" Value="1"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ToggleButton.Style>
+            </ToggleButton>
         </StackPanel>
 
         <!-- Main content area for sound buttons -->

@@ -10,7 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="menu.png" />
+    <None Remove="images\pause.png" />
+    <None Remove="images\play.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +26,13 @@
 
   <ItemGroup>
     <Resource Include="menu.png" />
+    <Resource Include="pause.png" />
+    <Resource Include="play.png" />
+    <Resource Include="reset.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="images\" />
   </ItemGroup>
 
 </Project>
