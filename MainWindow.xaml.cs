@@ -7,7 +7,6 @@ using System.Windows.Media;
 using Newtonsoft.Json;
 using NAudio.Wave;
 using System.Windows.Controls.Primitives;
-using System.Windows.Media.Imaging;
 
 namespace Ome
 {
@@ -26,14 +25,18 @@ namespace Ome
         public MainWindow()
         {
             InitializeComponent();
+
+            // Load the sound folder path and files
             SetSoundFolderPath();
-
-            var args = Environment.GetCommandLineArgs();
-            HandleCommandLineArgs(args);
-
             LoadSoundButtons();
+
+            // Adjust window size based on loaded content
             AdjustWindowHeight();
             AdjustWindowWidth();
+
+            // Handle command-line arguments after initialization
+            var args = Environment.GetCommandLineArgs();
+            HandleCommandLineArgs(args);
         }
 
         /// <summary>
@@ -50,6 +53,7 @@ namespace Ome
 
             if (args.Contains("--minimize"))
             {
+                // Minimize the window only after everything is loaded
                 this.WindowState = WindowState.Minimized;
             }
 
@@ -134,11 +138,10 @@ namespace Ome
         }
 
         /// <summary>
-        /// Event handler for the Reset button.
+        /// Event handler for the Reset button to reset all tracks.
         /// </summary>
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
-            // Call the ResetAllTracks method to stop all playback and reset the volume sliders
             ResetAllTracks();
         }
 
@@ -147,6 +150,7 @@ namespace Ome
         /// </summary>
         private void SetSoundFolderPath()
         {
+            // Change to use AppContext.BaseDirectory instead of AppDomain.CurrentDomain.BaseDirectory
             string currentDirectory = AppContext.BaseDirectory;
             SoundFolderPath = currentDirectory;
 
@@ -215,8 +219,8 @@ namespace Ome
         /// </summary>
         private void AdjustWindowHeight()
         {
-            double trackButtonHeight = 47;
-            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 130;
+            double trackButtonHeight = 52;
+            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 80;
 
             double screenHeight = SystemParameters.FullPrimaryScreenHeight;
 
