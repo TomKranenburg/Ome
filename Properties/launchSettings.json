@@ -1,8 +1,7 @@
 {
   "profiles": {
     "Ome": {
-      "commandName": "Project",
-      "commandLineArgs": "--minimize"
+      "commandName": "Project"
     }
   }
 }

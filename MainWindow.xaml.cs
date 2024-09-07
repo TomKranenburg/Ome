@@ -7,6 +7,7 @@ using System.Windows.Media;
 using Newtonsoft.Json;
 using NAudio.Wave;
 using System.Windows.Controls.Primitives;
+using System.Diagnostics;
 
 namespace Ome
 {
@@ -46,6 +47,11 @@ namespace Ome
         /// <param name="args">The command-line arguments.</param>
         public void HandleCommandLineArgs(string[] args)
         {
+            foreach (string arg in args)
+            {
+                Debug.WriteLine($"Processing arg: {arg}");
+            }
+
             if (args.Length > 1)
             {
                 ConfigFilePath = args[1];

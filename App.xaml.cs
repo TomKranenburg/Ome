@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,12 +23,14 @@ namespace Ome
             if (isNewInstance)
             {
                 // Start the named pipe server for communication
+                Debug.WriteLine($"No running instance detected");
                 StartNamedPipeServer();
                 base.OnStartup(e); // Proceed with normal startup
             }
             else
             {
                 // Another instance is already running; pass the arguments to it and exit
+                Debug.WriteLine($"Running instance detected");
                 SendCommandLineArgsToRunningInstance(e.Args);
                 Shutdown(); // Exit this new instance
             }
@@ -39,6 +42,7 @@ namespace Ome
         /// <param name="args">Command-line arguments.</param>
         private void SendCommandLineArgsToRunningInstance(string[] args)
         {
+            Debug.WriteLine($"Sending command-line arguments to running instance");
             try
             {
                 using (var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out))
@@ -76,9 +80,15 @@ namespace Ome
                             using (var reader = new StreamReader(server))
                             {
                                 var args = reader.ReadLine();
+                                Debug.WriteLine($"Passing args to existing instance: {args}");
                                 if (!string.IsNullOrEmpty(args))
                                 {
-                                    Application.Current.Dispatcher.Invoke(() => ProcessCommandLineArgs(args.Split(' ')));
+
+                                    string executablePath = Assembly.GetExecutingAssembly().Location;
+                                    // Prepend the executable path to the args string
+                                    string[] ParsedArgs = args.Split(' ');
+                                    ParsedArgs = (new string[] { executablePath }).Concat(ParsedArgs).ToArray();
+                                    Application.Current.Dispatcher.Invoke(() => ProcessCommandLineArgs(ParsedArgs));
                                 }
                             }
                         }
