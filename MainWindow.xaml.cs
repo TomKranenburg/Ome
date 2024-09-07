@@ -7,7 +7,6 @@ using System.Windows.Media;
 using Newtonsoft.Json;
 using NAudio.Wave;
 using System.Windows.Controls.Primitives;
-using System.Diagnostics;
 
 namespace Ome
 {
@@ -19,6 +18,7 @@ namespace Ome
         private Dictionary<string, AudioFileReader> AudioReaders = new Dictionary<string, AudioFileReader>();
         private Dictionary<string, double> TrackVolumes = new Dictionary<string, double>();
         private Dictionary<string, Slider> VolumeSliders = new Dictionary<string, Slider>();
+        private Dictionary<string, TextBox> VolumeTextBoxes = new Dictionary<string, TextBox>(); // TextBox for each volume
         private Dictionary<string, ToggleButton> PlayToggleButtons = new Dictionary<string, ToggleButton>();
 
         public string ConfigFilePath;
@@ -47,11 +47,6 @@ namespace Ome
         /// <param name="args">The command-line arguments.</param>
         public void HandleCommandLineArgs(string[] args)
         {
-            foreach (string arg in args)
-            {
-                Debug.WriteLine($"Processing arg: {arg}");
-            }
-
             if (args.Length > 1)
             {
                 ConfigFilePath = args[1];
@@ -129,6 +124,118 @@ namespace Ome
         }
 
         /// <summary>
+        /// Loads the audio files (flac, mp3, wav) into the UI as buttons with volume sliders and text boxes.
+        /// </summary>
+        private void LoadSoundButtons()
+        {
+            if (!Directory.Exists(SoundFolderPath)) return;
+
+            ButtonsPanel.Children.Clear(); // Clear existing buttons before reloading
+
+            var audioFiles = new List<string>();
+            audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.flac"));
+            audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.mp3"));
+            audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.wav"));
+
+            foreach (var audioFile in audioFiles)
+            {
+                var FileName = System.IO.Path.GetFileNameWithoutExtension(audioFile);
+
+                var StackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
+
+                var FileLabel = new Label { Content = FileName, Foreground = Brushes.White, Width = 150, Margin = new Thickness(5) };
+                StackPanel.Children.Add(FileLabel);
+
+                var PlayToggleButton = new ToggleButton { Content = "Play", Tag = audioFile, Width = 75, Margin = new Thickness(5) };
+                PlayToggleButton.Checked += PlayToggleButton_Checked;
+                PlayToggleButton.Unchecked += PlayToggleButton_Unchecked;
+                StackPanel.Children.Add(PlayToggleButton);
+
+                PlayToggleButtons[audioFile] = PlayToggleButton;
+
+                var VolumeSlider = new Slider { Minimum = 0, Maximum = 1, Value = 0.5, Width = 100, Margin = new Thickness(5) };
+                VolumeSlider.Tag = audioFile;
+                VolumeSlider.ValueChanged += VolumeSlider_ValueChanged;
+                StackPanel.Children.Add(VolumeSlider);
+
+                VolumeSliders[audioFile] = VolumeSlider;
+
+                // TextBox for entering volume values
+                var VolumeTextBox = new TextBox
+                {
+                    Width = 50,
+                    Text = "0.500",
+                    Margin = new Thickness(5),
+                    TextAlignment = TextAlignment.Center // Center the content
+                };
+
+                VolumeTextBox.Tag = audioFile;
+                VolumeTextBox.TextChanged += VolumeTextBox_TextChanged;
+                StackPanel.Children.Add(VolumeTextBox);
+
+                VolumeTextBoxes[audioFile] = VolumeTextBox;
+
+                if (TrackVolumes.ContainsKey(audioFile))
+                {
+                    VolumeSlider.Value = TrackVolumes[audioFile];
+                    VolumeTextBox.Text = TrackVolumes[audioFile].ToString("0.000"); // Update TextBox with the current volume
+                }
+                else
+                {
+                    TrackVolumes[audioFile] = 0.5;
+                }
+
+                ButtonsPanel.Children.Add(StackPanel);
+            }
+        }
+
+        /// <summary>
+        /// Event handler for volume slider. Updates both the track volume and the corresponding text box.
+        /// </summary>
+        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            var Slider = sender as Slider;
+            var FilePath = Slider.Tag as string;
+            if (!AudioReaders.ContainsKey(FilePath))
+            {
+                AudioFileReader Reader = new AudioFileReader(FilePath);
+                AudioReaders[FilePath] = Reader;
+            }
+
+            TrackVolumes[FilePath] = Slider.Value;  // Save the individual track volume
+            AudioReaders[FilePath].Volume = (float)(Slider.Value * GlobalVolume);  // Update track volume based on global volume
+
+            if (VolumeTextBoxes.ContainsKey(FilePath))
+            {
+                VolumeTextBoxes[FilePath].Text = Slider.Value.ToString("0.000"); // Update the text box when slider changes
+            }
+
+        }
+
+        /// <summary>
+        /// Event handler for volume text box. Updates both the slider and the track volume.
+        /// </summary>
+        private void VolumeTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var TextBox = sender as TextBox;
+            var FilePath = TextBox.Tag as string;
+
+            if (double.TryParse(TextBox.Text, out double volume) && volume >= 0 && volume <= 1)
+            {
+                if (AudioReaders.ContainsKey(FilePath))
+                {
+                    TrackVolumes[FilePath] = volume;
+                    AudioReaders[FilePath].Volume = (float)(volume * GlobalVolume);  // Update track volume based on global volume
+
+                    if (VolumeSliders.ContainsKey(FilePath))
+                    {
+                        VolumeSliders[FilePath].Value = volume; // Update the slider when text box changes
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Event handler for the global volume slider. Updates the volume for all tracks.
         /// </summary>
         private void GlobalVolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -198,61 +305,12 @@ namespace Ome
         }
 
         /// <summary>
-        /// Loads the audio files (flac, mp3, wav) into the UI as buttons with volume sliders.
-        /// </summary>
-        private void LoadSoundButtons()
-        {
-            if (!Directory.Exists(SoundFolderPath)) return;
-
-            ButtonsPanel.Children.Clear(); // Clear existing buttons before reloading
-
-            var audioFiles = new List<string>();
-            audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.flac"));
-            audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.mp3"));
-            audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.wav"));
-
-            foreach (var audioFile in audioFiles)
-            {
-                var FileName = System.IO.Path.GetFileNameWithoutExtension(audioFile);
-
-                var StackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
-
-                var FileLabel = new Label { Content = FileName, Foreground = Brushes.White, Width = 150, Margin = new Thickness(5) };
-                StackPanel.Children.Add(FileLabel);
-
-                var PlayToggleButton = new ToggleButton { Content = "Play", Tag = audioFile, Width = 75, Margin = new Thickness(5) };
-                PlayToggleButton.Checked += PlayToggleButton_Checked;
-                PlayToggleButton.Unchecked += PlayToggleButton_Unchecked;
-                StackPanel.Children.Add(PlayToggleButton);
-
-                PlayToggleButtons[audioFile] = PlayToggleButton;
-
-                var VolumeSlider = new Slider { Minimum = 0, Maximum = 1, Value = 0.5, Width = 100, Margin = new Thickness(5) };
-                VolumeSlider.Tag = audioFile;
-                VolumeSlider.ValueChanged += VolumeSlider_ValueChanged;
-                StackPanel.Children.Add(VolumeSlider);
-
-                VolumeSliders[audioFile] = VolumeSlider;
-
-                if (TrackVolumes.ContainsKey(audioFile))
-                {
-                    VolumeSlider.Value = TrackVolumes[audioFile];
-                }
-                else
-                {
-                    TrackVolumes[audioFile] = 0.5;
-                }
-                ButtonsPanel.Children.Add(StackPanel);
-            }
-        }
-
-        /// <summary>
         /// Adjusts the window height based on the number of tracks loaded.
         /// </summary>
         private void AdjustWindowHeight()
         {
-            double trackButtonHeight = 52;
-            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 118;
+            double trackButtonHeight = 60;
+            double totalHeight = (trackButtonHeight * ButtonsPanel.Children.Count) + 50;
 
             double screenHeight = SystemParameters.FullPrimaryScreenHeight;
 
@@ -266,10 +324,14 @@ namespace Ome
         {
             double labelWidth = 150;
             double buttonWidth = 75;
-            double sliderWidth = 150;
-            double marginWidth = 30;
+            double sliderWidth = 100;
+            double textBoxWidth = 90;
+            double marginWidth = 40;
 
-            this.Width = labelWidth + buttonWidth + sliderWidth + marginWidth;
+            double MaxWidth = labelWidth + buttonWidth + sliderWidth + textBoxWidth + marginWidth;
+
+            this.Width = MaxWidth;
+            this.MaxWidth = MaxWidth;
         }
 
         /// <summary>
@@ -345,23 +407,8 @@ namespace Ome
                 if (AudioReaders.ContainsKey(FilePath))
                 {
                     AudioReaders[FilePath].Dispose();
-                    AudioReaders.Remove(FilePath);
+                    //AudioReaders.Remove(FilePath);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Event handler for the volume slider of each track. Updates the volume for that specific track.
-        /// </summary>
-        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            var Slider = sender as Slider;
-            var FilePath = Slider.Tag as string;
-
-            if (AudioReaders.ContainsKey(FilePath))
-            {
-                TrackVolumes[FilePath] = Slider.Value;  // Save the individual track volume
-                AudioReaders[FilePath].Volume = (float)(Slider.Value * GlobalVolume);  // Update track volume based on global volume
             }
         }
 
@@ -442,6 +489,11 @@ namespace Ome
                         VolumeSliders[trackConfig.FilePath].Value = trackConfig.Volume;
                     }
 
+                    if (VolumeTextBoxes.ContainsKey(trackConfig.FilePath))
+                    {
+                        VolumeTextBoxes[trackConfig.FilePath].Text = trackConfig.Volume.ToString("0.000");
+                    }
+
                     if (trackConfig.IsPlaying)
                     {
                         StartSound(trackConfig.FilePath);
@@ -483,18 +535,15 @@ namespace Ome
         }
 
         /// <summary>
-        /// Resets all tracks to their default state (stops playback, resets volume),
-        /// and resets the global volume slider to 50%.
+        /// Resets all tracks to their default state (stops playback, resets volume).
         /// </summary>
         public void ResetAllTracks()
         {
-            // Stop all currently playing tracks
             foreach (var track in new List<string>(PlayingSounds.Keys))
             {
                 StopSound(track);
             }
 
-            // Reset all toggle buttons and volume sliders
             foreach (var toggleButton in PlayToggleButtons.Values)
             {
                 toggleButton.IsChecked = false;
@@ -503,16 +552,15 @@ namespace Ome
 
             foreach (var slider in VolumeSliders.Values)
             {
-                slider.Value = 0.5;  // Reset individual track volume sliders to 50%
+                slider.Value = 0.5;
             }
 
-            // Clear the track volumes dictionary and reload sound buttons
-            TrackVolumes.Clear();
-            LoadSoundButtons();
+            foreach (var textBox in VolumeTextBoxes.Values)
+            {
+                textBox.Text = "0.500";
+            }
 
-            // Reset the global volume slider to 50%
-            GlobalVolumeSlider.Value = 0.5;
-            GlobalVolume = 0.5;
+            TrackVolumes.Clear();
         }
 
         /// <summary>
