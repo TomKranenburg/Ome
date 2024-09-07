@@ -417,6 +417,12 @@ namespace Ome
         /// </summary>
         public void SaveConfiguration(string filePath)
         {
+            // Ensure the file has a .json extension
+            if (!filePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                filePath += ".json";
+            }
+
             var config = new List<TrackConfig>();
 
             foreach (var track in AudioReaders.Keys)
@@ -434,7 +440,8 @@ namespace Ome
                 Width = this.Width,
                 Height = this.Height,
                 Left = this.Left,
-                Top = this.Top
+                Top = this.Top,
+                GlobalVolume = this.GlobalVolume  // Save the global volume
             };
 
             var configData = new ConfigData
@@ -479,6 +486,10 @@ namespace Ome
                 this.Height = configData.Window.Height;
                 this.Left = configData.Window.Left;
                 this.Top = configData.Window.Top;
+
+                // Restore the global volume
+                this.GlobalVolume = configData.Window.GlobalVolume;
+                GlobalVolumeSlider.Value = GlobalVolume;
 
                 foreach (var trackConfig in configData.Tracks)
                 {
@@ -587,6 +598,7 @@ namespace Ome
         public double Height { get; set; }
         public double Left { get; set; }
         public double Top { get; set; }
+        public double GlobalVolume { get; set; }  // Add global volume to window config
     }
 
     public class ConfigData

@@ -35,7 +35,12 @@ namespace Ome
             if (mainWindow != null)
             {
                 // Open file dialog to save config file
-                Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog();
+                Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    FileName = "config",         // Default file name
+                    DefaultExt = ".json",        // Default file extension
+                    Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*" // Filter files by extension
+                };
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     mainWindow.SaveConfiguration(saveFileDialog.FileName);

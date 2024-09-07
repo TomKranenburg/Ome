@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Ome.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Ome" Height="400" Width="600" MinHeight="118" Background="Black">
+        Title="Ome - Ambient Soundscape Mixer" Height="400" Width="600" MinHeight="118" Background="Black">
     <DockPanel>
         <!-- Top Panel with Reset Button, Menu Button, and Play/Pause Toggle Button -->
         <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Horizontal" Margin="10">
