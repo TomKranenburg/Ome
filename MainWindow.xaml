@@ -50,7 +50,7 @@
             </Button>
 
             <!-- Menu Button -->
-            <Button Content="" Width="60" Height="60" Click="MenuButton_Click" BorderBrush="Black">
+            <Button Content="" Width="70" Height="70" Click="MenuButton_Click" BorderBrush="Black">
                 <Button.Background>
                     <ImageBrush ImageSource="/menu.png"/>
                 </Button.Background>
