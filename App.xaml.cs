@@ -52,7 +52,9 @@ namespace Ome
                     using (var writer = new StreamWriter(client))
                     {
                         writer.AutoFlush = true;
-                        writer.WriteLine(string.Join(" ", args));
+                        // Join arguments with quotes around those that contain spaces
+                        var formattedArgs = string.Join(" ", args.Select(arg => arg.Contains(" ") ? $"\"{arg}\"" : arg));
+                        writer.WriteLine(formattedArgs);
                     }
                 }
             }
@@ -81,14 +83,14 @@ namespace Ome
                             {
                                 var args = reader.ReadLine();
                                 Debug.WriteLine($"Passing args to existing instance: {args}");
+
                                 if (!string.IsNullOrEmpty(args))
                                 {
-
                                     string executablePath = Assembly.GetExecutingAssembly().Location;
                                     // Prepend the executable path to the args string
-                                    string[] ParsedArgs = args.Split(' ');
-                                    ParsedArgs = (new string[] { executablePath }).Concat(ParsedArgs).ToArray();
-                                    Application.Current.Dispatcher.Invoke(() => ProcessCommandLineArgs(ParsedArgs));
+                                    string[] parsedArgs = ParseArguments(args);
+                                    parsedArgs = (new string[] { executablePath }).Concat(parsedArgs).ToArray();
+                                    Application.Current.Dispatcher.Invoke(() => ProcessCommandLineArgs(parsedArgs));
                                 }
                             }
                         }
@@ -99,6 +101,47 @@ namespace Ome
                     }
                 }
             }, TaskCreationOptions.LongRunning);
+        }
+
+        /// <summary>
+        /// Parses arguments, handling quoted strings to support spaces in arguments.
+        /// </summary>
+        /// <param name="input">The raw input string.</param>
+        /// <returns>An array of parsed arguments.</returns>
+        private string[] ParseArguments(string input)
+        {
+            var args = new List<string>();
+            var currentArg = new System.Text.StringBuilder();
+            bool insideQuotes = false;
+
+            foreach (var c in input)
+            {
+                if (c == '\"')
+                {
+                    insideQuotes = !insideQuotes; // Toggle inside/outside of quotes
+                }
+                else if (c == ' ' && !insideQuotes)
+                {
+                    // If it's a space and we're not inside quotes, it's a separator
+                    if (currentArg.Length > 0)
+                    {
+                        args.Add(currentArg.ToString());
+                        currentArg.Clear();
+                    }
+                }
+                else
+                {
+                    // Append characters normally
+                    currentArg.Append(c);
+                }
+            }
+
+            if (currentArg.Length > 0)
+            {
+                args.Add(currentArg.ToString());
+            }
+
+            return args.ToArray();
         }
 
         /// <summary>

@@ -50,6 +50,12 @@ namespace Ome
         /// <param name="args">The command-line arguments.</param>
         public void HandleCommandLineArgs(string[] args)
         {
+
+            foreach (var arg in args)
+            {
+                Debug.WriteLine($"Argument: {arg}");
+            }
+
             if (args.Length > 1)
             {
                 ConfigFilePath = args[1];
