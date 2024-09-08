@@ -21,9 +21,11 @@
   <ItemGroup>
     <None Remove="images\pause.png" />
     <None Remove="images\play.png" />
+    <None Remove="menu-logo.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="menu-logo.png" />
     <Content Include="ome-logo.ico" />
   </ItemGroup>
 

@@ -154,7 +154,7 @@ namespace Ome
                 var StackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
 
                 // Label for loop count
-                var LoopCountLabel = new Label { Content = "0", Foreground = Brushes.White, Width = 40, Margin = new Thickness(5), HorizontalContentAlignment = HorizontalAlignment.Center};
+                var LoopCountLabel = new Label { Content = "0000", Foreground = Brushes.White, Width = 40, Margin = new Thickness(5), HorizontalContentAlignment = HorizontalAlignment.Center};
                 StackPanel.Children.Add(LoopCountLabel);
 
                 // Label for track name
@@ -420,7 +420,7 @@ namespace Ome
                     {
                         if (LoopStreams.ContainsKey(FilePath))
                         {
-                            LoopCountLabels[FilePath].Content = $"{LoopStreams[FilePath].LoopCount}";
+                            LoopCountLabels[FilePath].Content = $"{LoopStreams[FilePath].LoopCount:D4}";
                         }
                     });
                     System.Threading.Thread.Sleep(1000);  // Update every second
@@ -552,11 +552,16 @@ namespace Ome
 
                     if (trackConfig.IsPlaying)
                     {
-                        StartSound(trackConfig.FilePath);
+                        StartSound(trackConfig.FilePath); // Start the sound as usual
+
                         if (PlayToggleButtons.ContainsKey(trackConfig.FilePath))
                         {
+                            // Set the toggle button state to "checked" and change its content to "Stop"
                             PlayToggleButtons[trackConfig.FilePath].IsChecked = true;
                             PlayToggleButtons[trackConfig.FilePath].Content = "Stop";
+
+                            // Manually set the background color to light blue
+                            PlayToggleButtons[trackConfig.FilePath].Background = Brushes.LightBlue;
                         }
                     }
                 }
@@ -616,12 +621,12 @@ namespace Ome
 
             foreach (var textBox in VolumeTextBoxes.Values)
             {
-                textBox.Text = "0.50";
+                textBox.Text = "0.500";
             }
 
             foreach (var loopLabel in LoopCountLabels.Values)
             {
-                loopLabel.Content = "0";  // Reset the loop count display
+                loopLabel.Content = "0000";  // Reset the loop count display
             }
 
             foreach (var loopStream in LoopStreams.Values)

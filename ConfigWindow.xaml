@@ -1,7 +1,9 @@
 ﻿<Window x:Class="Ome.ConfigWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Config" Height="300" Width="300" Background="Black">
+        Title="Configuration Menu" Height="300" Width="300" Background="Black">
+    
+    
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20">
         <!-- Load Config Button -->
         <Button Content="Load Config" Width="150" Height="40" Click="LoadConfigButton_Click" Margin="10"/>
