@@ -57,10 +57,41 @@
             </Button>
 
             <!-- Play/Pause Toggle Button (Right of Menu Button) -->
-            <ToggleButton Name="PlayPauseToggleButton" Content="" Width="60" Height="60" BorderBrush="Black" Click="PlayPauseToggleButton_Click">
-                <ToggleButton.Background>
-                    <ImageBrush ImageSource="/pause.png"/>
-                </ToggleButton.Background>
+            <ToggleButton Name="PlayPauseToggleButton" Width="60" Height="60" Click="PlayPauseToggleButton_Click">
+                <ToggleButton.Template>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="Transparent">
+                            <!-- Make the background transparent -->
+                            <Image x:Name="toggleImage" Source="/pause.png" Stretch="Uniform"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Trigger to change image when toggled (checked) -->
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="toggleImage" Property="Source" Value="/play.png"/>
+                            </Trigger>
+                            <!-- Remove default highlight when checked -->
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="toggleImage" Property="Source" Value="/pause.png"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </ToggleButton.Template>
+
+                <ToggleButton.Style>
+                    <Style TargetType="ToggleButton">
+                        <!-- Ensure no default background is set -->
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+
+                        <!-- Trigger to dim the button slightly on mouse over without changing the color -->
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ToggleButton.Style>
             </ToggleButton>
         </StackPanel>
 
