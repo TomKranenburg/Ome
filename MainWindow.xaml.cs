@@ -148,7 +148,7 @@ namespace Ome
                 var StackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
 
                 // Label for loop count
-                var LoopCountLabel = new Label { Content = "0", Foreground = Brushes.White, Width = 20, Margin = new Thickness(5) };
+                var LoopCountLabel = new Label { Content = "0", Foreground = Brushes.White, Width = 20, Margin = new Thickness(5), HorizontalContentAlignment = HorizontalAlignment.Center};
                 StackPanel.Children.Add(LoopCountLabel);
 
                 // Label for track name
