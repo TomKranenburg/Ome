@@ -7,19 +7,22 @@ using System.Windows.Media;
 using Newtonsoft.Json;
 using NAudio.Wave;
 using System.Windows.Controls.Primitives;
+using System.Diagnostics;
+using NAudio.CoreAudioApi;
 
 namespace Ome
 {
     public partial class MainWindow : Window
     {
         private string SoundFolderPath;
-        private Dictionary<string, WaveOutEvent> PlayingSounds = new Dictionary<string, WaveOutEvent>();
+        private Dictionary<string, IWavePlayer> PlayingSounds = new Dictionary<string, IWavePlayer>();
         private Dictionary<string, LoopStream> LoopStreams = new Dictionary<string, LoopStream>();
         private Dictionary<string, AudioFileReader> AudioReaders = new Dictionary<string, AudioFileReader>();
         private Dictionary<string, double> TrackVolumes = new Dictionary<string, double>();
         private Dictionary<string, Slider> VolumeSliders = new Dictionary<string, Slider>();
         private Dictionary<string, TextBox> VolumeTextBoxes = new Dictionary<string, TextBox>(); // TextBox for each volume
         private Dictionary<string, ToggleButton> PlayToggleButtons = new Dictionary<string, ToggleButton>();
+        private Dictionary<string, Label> LoopCountLabels = new Dictionary<string, Label>();
 
         public string ConfigFilePath;
         private double GlobalVolume = 0.5;  // Default global volume level (50%)
@@ -141,11 +144,18 @@ namespace Ome
             {
                 var FileName = System.IO.Path.GetFileNameWithoutExtension(audioFile);
 
+                // StackPanel for track UI
                 var StackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
 
+                // Label for loop count
+                var LoopCountLabel = new Label { Content = "0", Foreground = Brushes.White, Width = 20, Margin = new Thickness(5) };
+                StackPanel.Children.Add(LoopCountLabel);
+
+                // Label for track name
                 var FileLabel = new Label { Content = FileName, Foreground = Brushes.White, Width = 150, Margin = new Thickness(5) };
                 StackPanel.Children.Add(FileLabel);
 
+                // Play/Stop toggle button
                 var PlayToggleButton = new ToggleButton { Content = "Play", Tag = audioFile, Width = 75, Margin = new Thickness(5) };
                 PlayToggleButton.Checked += PlayToggleButton_Checked;
                 PlayToggleButton.Unchecked += PlayToggleButton_Unchecked;
@@ -153,22 +163,16 @@ namespace Ome
 
                 PlayToggleButtons[audioFile] = PlayToggleButton;
 
-                var VolumeSlider = new Slider { Minimum = 0, Maximum = 1, Value = 0.5, Width = 100, Margin = new Thickness(5) };
+                // Volume slider
+                var VolumeSlider = new Slider { Minimum = 0, Maximum = 1, Value = 0.5, Width = 200, Margin = new Thickness(5) };
                 VolumeSlider.Tag = audioFile;
                 VolumeSlider.ValueChanged += VolumeSlider_ValueChanged;
                 StackPanel.Children.Add(VolumeSlider);
 
                 VolumeSliders[audioFile] = VolumeSlider;
 
-                // TextBox for entering volume values
-                var VolumeTextBox = new TextBox
-                {
-                    Width = 50,
-                    Text = "0.500",
-                    Margin = new Thickness(5),
-                    TextAlignment = TextAlignment.Center // Center the content
-                };
-
+                // TextBox for volume input
+                var VolumeTextBox = new TextBox { Width = 50, Text = "0.50", Margin = new Thickness(5), TextAlignment = TextAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center };
                 VolumeTextBox.Tag = audioFile;
                 VolumeTextBox.TextChanged += VolumeTextBox_TextChanged;
                 StackPanel.Children.Add(VolumeTextBox);
@@ -178,16 +182,22 @@ namespace Ome
                 if (TrackVolumes.ContainsKey(audioFile))
                 {
                     VolumeSlider.Value = TrackVolumes[audioFile];
-                    VolumeTextBox.Text = TrackVolumes[audioFile].ToString("0.000"); // Update TextBox with the current volume
+                    VolumeTextBox.Text = TrackVolumes[audioFile].ToString("0.000");  // Show three decimal places
                 }
                 else
                 {
                     TrackVolumes[audioFile] = 0.5;
+                    VolumeTextBox.Text = "0.500";  // Show three decimal places for default value
                 }
 
+                // Add the stack panel for this track to the main panel
                 ButtonsPanel.Children.Add(StackPanel);
+
+                // Store loop count label in a dictionary for updating later
+                LoopCountLabels[audioFile] = LoopCountLabel;  // Add this line to store the loop label
             }
         }
+
 
         /// <summary>
         /// Event handler for volume slider. Updates both the track volume and the corresponding text box.
@@ -326,7 +336,7 @@ namespace Ome
             double buttonWidth = 75;
             double sliderWidth = 100;
             double textBoxWidth = 90;
-            double marginWidth = 40;
+            double marginWidth = 80;
 
             double MaxWidth = labelWidth + buttonWidth + sliderWidth + textBoxWidth + marginWidth;
 
@@ -346,6 +356,7 @@ namespace Ome
             {
                 StartSound(FilePath);
                 Button.Content = "Stop";
+                Button.Background = Brushes.LightBlue; // Set background to light blue when "Stop"
             }
         }
 
@@ -361,6 +372,7 @@ namespace Ome
             {
                 StopSound(FilePath);
                 Button.Content = "Play";
+                Button.Background = Brushes.White; // Reset background to default (white) when "Play"
             }
         }
 
@@ -369,23 +381,44 @@ namespace Ome
         /// </summary>
         private void StartSound(string FilePath)
         {
-            AudioFileReader Reader = new AudioFileReader(FilePath);
-            AudioReaders[FilePath] = Reader;
+            AudioFileReader reader = new AudioFileReader(FilePath);
+            AudioReaders[FilePath] = reader;
 
             // Set the volume to the track volume multiplied by the global volume
             if (TrackVolumes.ContainsKey(FilePath))
             {
-                Reader.Volume = (float)(TrackVolumes[FilePath] * GlobalVolume);
+                reader.Volume = (float)(TrackVolumes[FilePath] * GlobalVolume);
             }
 
-            var Loop = new LoopStream(Reader);
-            var OutputDevice = new WaveOutEvent();
-            OutputDevice.Init(Loop);
-            OutputDevice.Play();
+            // Wrap the reader in a LoopStream to enable looping
+            var loopStream = new LoopStream(reader);
+            LoopStreams[FilePath] = loopStream;
 
-            PlayingSounds[FilePath] = OutputDevice;
-            LoopStreams[FilePath] = Loop;
+            // Initialize the WasapiOut for more precise, lower-latency playback
+            var outputDevice = new WasapiOut(AudioClientShareMode.Shared, 200);  // 200ms latency
+            outputDevice.Init(loopStream);
+            outputDevice.Play();
+
+            // Store the WasapiOut object in the PlayingSounds dictionary as IWavePlayer
+            PlayingSounds[FilePath] = outputDevice;
+
+            // Update loop count periodically
+            Task.Run(() =>
+            {
+                while (PlayingSounds.ContainsKey(FilePath))
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        if (LoopStreams.ContainsKey(FilePath))
+                        {
+                            LoopCountLabels[FilePath].Content = $"{LoopStreams[FilePath].LoopCount}";
+                        }
+                    });
+                    System.Threading.Thread.Sleep(1000);  // Update every second
+                }
+            });
         }
+
 
         /// <summary>
         /// Stops playing an audio file.
@@ -395,22 +428,24 @@ namespace Ome
             if (PlayingSounds.ContainsKey(FilePath))
             {
                 PlayingSounds[FilePath].Stop();
-                PlayingSounds[FilePath].Dispose();
+                PlayingSounds[FilePath].Dispose();  // Dispose of the WasapiOut or WaveOutEvent object
                 PlayingSounds.Remove(FilePath);
 
                 if (LoopStreams.ContainsKey(FilePath))
                 {
-                    LoopStreams[FilePath].Dispose();
+                    LoopStreams[FilePath].Dispose();  // Dispose of the LoopStream
                     LoopStreams.Remove(FilePath);
                 }
 
                 if (AudioReaders.ContainsKey(FilePath))
                 {
-                    AudioReaders[FilePath].Dispose();
-                    //AudioReaders.Remove(FilePath);
+                    AudioReaders[FilePath].Dispose();  // Dispose of the AudioFileReader
+                    AudioReaders.Remove(FilePath);
                 }
             }
         }
+
+
 
         /// <summary>
         /// Saves the current configuration (track volumes, window size, play states) to a file.
@@ -482,8 +517,9 @@ namespace Ome
                     StopSound(track);
                 }
 
-                this.Width = configData.Window.Width;
-                this.Height = configData.Window.Height;
+                // Respect minimum width and height
+                this.Width = Math.Max(configData.Window.Width, this.MinWidth);
+                this.Height = Math.Max(configData.Window.Height, this.MinHeight);
                 this.Left = configData.Window.Left;
                 this.Top = configData.Window.Top;
 
@@ -517,6 +553,9 @@ namespace Ome
                 }
             }
         }
+
+
+
 
         /// <summary>
         /// Stops all audio playback and disposes of resources when the window is closing.
@@ -568,11 +607,22 @@ namespace Ome
 
             foreach (var textBox in VolumeTextBoxes.Values)
             {
-                textBox.Text = "0.500";
+                textBox.Text = "0.50";
+            }
+
+            foreach (var loopLabel in LoopCountLabels.Values)
+            {
+                loopLabel.Content = "0";  // Reset the loop count display
+            }
+
+            foreach (var loopStream in LoopStreams.Values)
+            {
+                loopStream.LoopCount = 0;  // Reset the internal loop count in LoopStream
             }
 
             TrackVolumes.Clear();
         }
+
 
         /// <summary>
         /// Event handler for the Menu button. Opens the configuration window.
@@ -592,6 +642,8 @@ namespace Ome
         public double Volume { get; set; }
     }
 
+
+
     public class WindowConfig
     {
         public double Width { get; set; }
@@ -607,53 +659,92 @@ namespace Ome
         public WindowConfig Window { get; set; }
     }
 
+    // LoopStream class inherits from WaveStream and is responsible for continuously looping audio.
     public class LoopStream : WaveStream
     {
-        private readonly WaveStream SourceStream;
+        // The sourceStream is the underlying audio stream that will be looped.
+        private readonly WaveStream sourceStream;
 
+        // LoopCount keeps track of how many times the audio has looped. It starts at 0.
+        public int LoopCount { get; set; } = 0;
+
+        // Constructor that takes a WaveStream (the source audio file) as an argument.
         public LoopStream(WaveStream sourceStream)
         {
-            this.SourceStream = sourceStream;
+            // Assign the passed-in sourceStream to the class's internal sourceStream.
+            this.sourceStream = sourceStream;
         }
 
-        public override WaveFormat WaveFormat => SourceStream.WaveFormat;
+        // The WaveFormat property defines the format of the audio data (e.g., sample rate, channels).
+        // We override it to return the WaveFormat of the source stream.
+        public override WaveFormat WaveFormat => sourceStream.WaveFormat;
 
-        public override long Length => SourceStream.Length;
+        // The Length property defines the total length of the audio data in bytes.
+        // This property is used by the WaveOutEvent class to understand the size of the audio data.
+        public override long Length => sourceStream.Length;
 
+        // The Position property tracks the current read position in the audio stream.
+        // We override it to control and reset the position as needed for looping.
         public override long Position
         {
-            get => SourceStream.Position;
-            set => SourceStream.Position = value;
+            get => sourceStream.Position;  // Get the current position from the source stream
+            set => sourceStream.Position = value;  // Set the position in the source stream
         }
 
+        // The Read method reads audio data from the source stream into the provided buffer.
+        // It loops the audio when the end of the stream is reached.
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int totalBytesRead = 0;
+            int totalBytesRead = 0;  // Track how many bytes have been read
 
+            // Keep reading until we've filled the requested number of bytes in the buffer.
             while (totalBytesRead < count)
             {
-                int bytesRead = SourceStream.Read(buffer, offset + totalBytesRead, count - totalBytesRead);
+                // Read from the sourceStream into the buffer.
+                int bytesRead = sourceStream.Read(buffer, offset + totalBytesRead, count - totalBytesRead);
+                Debug.WriteLine($"Bytes read: {bytesRead}");
+                // If no more bytes can be read (end of stream), check if we should loop.
                 if (bytesRead == 0)
                 {
-                    if (SourceStream.Position == 0 || SourceStream.Position == SourceStream.Length)
-                    {
-                        break;
-                    }
-                    SourceStream.Position = 0;
+                    // If the stream has reached the end, reset the position to loop from the start.
+                    //if (sourceStream.Position == sourceStream.Length)
+                    //{
+                        Debug.WriteLine($"Looping: {sourceStream}");
+                        sourceStream.Position = 0;  // Loop back to the start of the stream
+                        LoopCount++;  // Increment the loop count to track how many times we've looped
+                    //}
                 }
+
+                // Add the bytes read in this iteration to the total bytes read.
                 totalBytesRead += bytesRead;
+
+                // If no bytes were read and we're not at the beginning, break the loop to avoid infinite looping.
+                if (bytesRead == 0 && sourceStream.Position == 0)
+                {
+                    break;
+                }
             }
 
+            // Return the total number of bytes that were read into the buffer.
             return totalBytesRead;
         }
 
+        // Dispose method is called to release resources when the stream is no longer needed.
+        // Here, we ensure that the sourceStream is also disposed to free any associated resources.
         protected override void Dispose(bool disposing)
         {
+            // Check if we are disposing of managed resources.
             if (disposing)
             {
-                SourceStream.Dispose();
+                // Dispose of the underlying sourceStream to release file handles and memory.
+                sourceStream.Dispose();
             }
+
+            // Call the base class Dispose method to clean up the WaveStream.
             base.Dispose(disposing);
         }
     }
+
+
+
 }

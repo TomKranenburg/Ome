@@ -1,67 +1,72 @@
 ﻿<Window x:Class="Ome.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Ome - Ambient Soundscape Mixer" Height="400" Width="600" MinHeight="118" Background="Black">
+        Title="Ome - Ambient Soundscape Mixer" Height="400" Width="600" MinHeight="118" Background="Black" MinWidth="600">
+
+    <Window.Resources>
+        <!-- Base style for Buttons and ToggleButtons to remove mouse-over highlight and dim on hover -->
+        <Style x:Key="BaseButtonStyle" TargetType="ButtonBase">
+            <!-- Remove mouse-over highlight by resetting the template -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ButtonBase">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
+            <!-- Default properties for the button -->
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="10,5"/>
+
+            <!-- Trigger for mouse-over effect -->
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.7"/>
+                    <!-- Dim the button by reducing opacity -->
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Apply the base style to both Buttons and ToggleButtons -->
+        <Style TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}" />
+        <Style TargetType="ToggleButton" BasedOn="{StaticResource BaseButtonStyle}" />
+    </Window.Resources>
+
     <DockPanel>
         <!-- Top Panel with Reset Button, Menu Button, and Play/Pause Toggle Button -->
         <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Horizontal" Margin="10">
             <!-- Reset Button (Left of Menu Button) -->
-            <Button Content="" Width="60" Height="60" Click="ResetButton_Click" BorderBrush="Black" Focusable="False">
+            <Button Content="" Width="60" Height="60" Click="ResetButton_Click" BorderBrush="Black">
                 <Button.Background>
                     <ImageBrush ImageSource="/reset.png"/>
                 </Button.Background>
             </Button>
 
             <!-- Menu Button -->
-            <Button Content="" Width="60" Height="60" Click="MenuButton_Click" BorderBrush="Black" Focusable="False">
+            <Button Content="" Width="60" Height="60" Click="MenuButton_Click" BorderBrush="Black">
                 <Button.Background>
                     <ImageBrush ImageSource="/menu.png"/>
                 </Button.Background>
             </Button>
 
             <!-- Play/Pause Toggle Button (Right of Menu Button) -->
-            <ToggleButton Name="PlayPauseToggleButton" Content="" Width="60" Height="60" BorderBrush="Black" Focusable="False" Click="PlayPauseToggleButton_Click">
-                <ToggleButton.Style>
-                    <Style TargetType="ToggleButton">
-                        <Setter Property="OverridesDefaultStyle" Value="True"/>
-                        <Setter Property="Background">
-                            <Setter.Value>
-                                <ImageBrush ImageSource="/pause.png"/>
-                            </Setter.Value>
-                        </Setter>
-                        <Setter Property="BorderBrush" Value="Black"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ToggleButton">
-                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"/>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <!-- Trigger to switch background image based on IsChecked state -->
-                        <Style.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter Property="Background">
-                                    <Setter.Value>
-                                        <ImageBrush ImageSource="/play.png"/>
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="False">
-                                <Setter Property="Background">
-                                    <Setter.Value>
-                                        <ImageBrush ImageSource="/pause.png"/>
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </ToggleButton.Style>
+            <ToggleButton Name="PlayPauseToggleButton" Content="" Width="60" Height="60" BorderBrush="Black" Click="PlayPauseToggleButton_Click">
+                <ToggleButton.Background>
+                    <ImageBrush ImageSource="/pause.png"/>
+                </ToggleButton.Background>
             </ToggleButton>
         </StackPanel>
 
-        <!-- Global Volume Slider (Centred Under Menu Button) -->
+        <!-- Global Volume Slider -->
         <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Vertical" Margin="10">
-            <Slider Name="GlobalVolumeSlider" Minimum="0" Maximum="1" Value="0.5" Width="300" ValueChanged="GlobalVolumeSlider_ValueChanged" />
+            <Slider Name="GlobalVolumeSlider" Minimum="0" Maximum="1" Value="0.5" Width="200" HorizontalAlignment="Center" ValueChanged="GlobalVolumeSlider_ValueChanged"/>
         </StackPanel>
 
         <!-- Main content area for sound buttons -->
