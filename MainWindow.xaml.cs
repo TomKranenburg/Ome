@@ -154,7 +154,7 @@ namespace Ome
                 var StackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
 
                 // Label for loop count
-                var LoopCountLabel = new Label { Content = "0", Foreground = Brushes.White, Width = 20, Margin = new Thickness(5), HorizontalContentAlignment = HorizontalAlignment.Center};
+                var LoopCountLabel = new Label { Content = "0", Foreground = Brushes.White, Width = 40, Margin = new Thickness(5), HorizontalContentAlignment = HorizontalAlignment.Center};
                 StackPanel.Children.Add(LoopCountLabel);
 
                 // Label for track name
@@ -178,7 +178,7 @@ namespace Ome
                 VolumeSliders[audioFile] = VolumeSlider;
 
                 // TextBox for volume input
-                var VolumeTextBox = new TextBox { Width = 50, Text = "0.50", Margin = new Thickness(5), TextAlignment = TextAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center };
+                var VolumeTextBox = new TextBox { Width = 50, Text = "0.500", Margin = new Thickness(5), TextAlignment = TextAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center };
                 VolumeTextBox.Tag = audioFile;
                 VolumeTextBox.TextChanged += VolumeTextBox_TextChanged;
                 StackPanel.Children.Add(VolumeTextBox);
@@ -238,15 +238,18 @@ namespace Ome
 
             if (double.TryParse(TextBox.Text, out double volume) && volume >= 0 && volume <= 1)
             {
-                if (AudioReaders.ContainsKey(FilePath))
+                if (!AudioReaders.ContainsKey(FilePath))
                 {
-                    TrackVolumes[FilePath] = volume;
-                    AudioReaders[FilePath].Volume = (float)(volume * GlobalVolume);  // Update track volume based on global volume
+                    AudioFileReader reader = new AudioFileReader(FilePath);
+                    AudioReaders[FilePath] = reader;
+                }
 
-                    if (VolumeSliders.ContainsKey(FilePath))
-                    {
-                        VolumeSliders[FilePath].Value = volume; // Update the slider when text box changes
-                    }
+                TrackVolumes[FilePath] = volume;
+                AudioReaders[FilePath].Volume = (float)(volume * GlobalVolume);  // Update track volume based on global volume
+
+                if (VolumeSliders.ContainsKey(FilePath))
+                {
+                    VolumeSliders[FilePath].Value = volume; // Update the slider when text box changes
                 }
             }
         }
@@ -342,12 +345,12 @@ namespace Ome
             double buttonWidth = 75;
             double sliderWidth = 100;
             double textBoxWidth = 90;
-            double marginWidth = 80;
+            double marginWidth = 200;
 
             double MaxWidth = labelWidth + buttonWidth + sliderWidth + textBoxWidth + marginWidth;
 
             this.Width = MaxWidth;
-            this.MaxWidth = MaxWidth;
+            
         }
 
         /// <summary>
@@ -524,8 +527,8 @@ namespace Ome
                 }
 
                 // Respect minimum width and height
-                this.Width = Math.Max(configData.Window.Width, this.MinWidth);
-                this.Height = Math.Max(configData.Window.Height, this.MinHeight);
+                this.Width = configData.Window.Width;
+                this.Height = configData.Window.Height;
                 this.Left = configData.Window.Left;
                 this.Top = configData.Window.Top;
 
