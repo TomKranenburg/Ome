@@ -612,6 +612,7 @@ namespace Ome
             {
                 toggleButton.IsChecked = false;
                 toggleButton.Content = "Play";
+                toggleButton.Background = Brushes.White;
             }
 
             foreach (var slider in VolumeSliders.Values)
@@ -733,10 +734,10 @@ namespace Ome
                 totalBytesRead += bytesRead;
 
                 // If no bytes were read and we're not at the beginning, break the loop to avoid infinite looping.
-                if (bytesRead == 0 && sourceStream.Position == 0)
-                {
-                    break;
-                }
+                //if (bytesRead == 0 && sourceStream.Position == 0)
+                //{
+                    //break;
+                //}
             }
 
             // Return the total number of bytes that were read into the buffer.
