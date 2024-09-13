@@ -1,7 +1,9 @@
 (CAUTION: All code and documentation was written by Chat-GPT 4o)
+
 <div align="center">
 ![Logo](ome-logo-large.png)
 </div>
+
 # OME Documentation
 
 ## Overview
