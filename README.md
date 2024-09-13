@@ -1,5 +1,7 @@
 (CAUTION: All code and documentation was written by Chat-GPT 4o)
 
+![Logo](ome-logo-large)
+
 # OME Documentation
 
 ## Overview
