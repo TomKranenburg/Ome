@@ -1,6 +1,6 @@
 (CAUTION: All code and documentation was written by Chat-GPT 4o)
 
-![Logo](ome-logo-large)
+![Logo](ome-logo-large.png)
 
 # OME Documentation
 
