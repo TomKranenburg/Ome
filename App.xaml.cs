@@ -14,6 +14,7 @@ namespace Ome
     {
         private const string PipeName = "OmeAudioAppPipe";
         private Mutex _mutex;
+        public bool NoFocus { get; private set; } = false;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -23,6 +24,12 @@ namespace Ome
             if (isNewInstance)
             {
                 // Start the named pipe server for communication
+
+                if (e.Args.Contains("--no-focus") || e.Args.Contains("-nf"))
+                {
+                    this.NoFocus = true;
+                }
+
                 Debug.WriteLine($"No running instance detected");
                 StartNamedPipeServer();
                 base.OnStartup(e); // Proceed with normal startup
@@ -152,6 +159,12 @@ namespace Ome
         {
             if (Application.Current.MainWindow is MainWindow mainWindow)
             {
+                // Check for the no-focus parameter
+                if (args.Contains("--no-focus") || args.Contains("-nf"))
+                {
+                    mainWindow.ShowActivated = false;
+                }
+
                 mainWindow.HandleCommandLineArgs(args); // Pass the arguments to the main window
             }
         }

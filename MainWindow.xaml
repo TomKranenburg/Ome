@@ -48,6 +48,7 @@
                     <ImageBrush ImageSource="/reset.png"/>
                 </Button.Background>
             </Button>
+            
 
             <!-- Menu Button -->
             <Button Content="" Width="70" Height="70" Click="MenuButton_Click" BorderBrush="Black">

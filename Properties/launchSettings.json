@@ -1,7 +1,8 @@
 {
   "profiles": {
     "Ome": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "-nf"
     }
   }
 }

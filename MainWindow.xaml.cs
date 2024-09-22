@@ -29,6 +29,13 @@ namespace Ome
 
         public MainWindow()
         {
+
+            // Get the reference to the App instance
+            var app = (App)Application.Current;
+
+            // Set ShowActivated based on the NoFocus flag
+            this.ShowActivated = !app.NoFocus;
+
             InitializeComponent();
 
             // Load the sound folder path and files
@@ -131,7 +138,15 @@ namespace Ome
                 }
             }
         }
+        protected override void OnStateChanged(EventArgs e)
+        {
+            base.OnStateChanged(e);
 
+            if (this.WindowState == WindowState.Normal && ((App)Application.Current).NoFocus)
+            {
+                this.ShowActivated = false;
+            }
+        }
         /// <summary>
         /// Loads the audio files (flac, mp3, wav) into the UI as buttons with volume sliders and text boxes.
         /// </summary>
