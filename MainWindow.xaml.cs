@@ -46,6 +46,9 @@ namespace Ome
             AdjustWindowHeight();
             AdjustWindowWidth();
 
+            // Update the window title to reflect the initial play state
+            UpdateWindowTitle();
+
             // Handle command-line arguments after initialization
             var args = Environment.GetCommandLineArgs();
             HandleCommandLineArgs(args);
@@ -95,6 +98,39 @@ namespace Ome
             }
         }
 
+        private void UpdateWindowTitle()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                string baseTitle = "Ome - Ambient Soundscape Mixer";
+
+                // Handle the case when there are no tracks loaded or playing
+                if (PlayingSounds.Count == 0)
+                {
+                    this.Title = $"{baseTitle} - Stopped";
+                    return;
+                }
+
+                // Determine the play state
+                bool anyPlaying = PlayingSounds.Values.Any(player => player.PlaybackState == PlaybackState.Playing);
+                bool anyPaused = PlayingSounds.Values.Any(player => player.PlaybackState == PlaybackState.Paused);
+
+                // Update the title based on the play state
+                if (anyPlaying)
+                {
+                    this.Title = $"{baseTitle} - Playing";
+                }
+                else if (anyPaused)
+                {
+                    this.Title = $"{baseTitle} - Paused";
+                }
+                else
+                {
+                    this.Title = $"{baseTitle} - Stopped";
+                }
+            });
+        }
+
         /// <summary>
         /// Pauses all currently playing tracks.
         /// </summary>
@@ -115,6 +151,9 @@ namespace Ome
                     toggleButton.Content = "Resume";
                 }
             }
+
+            PlayPauseToggleButton.IsChecked = true;
+            UpdateWindowTitle();
         }
 
         /// <summary>
@@ -137,6 +176,10 @@ namespace Ome
                     toggleButton.Content = "Stop";
                 }
             }
+
+            PlayPauseToggleButton.IsChecked = false;
+            UpdateWindowTitle();
+
         }
         protected override void OnStateChanged(EventArgs e)
         {
@@ -441,6 +484,7 @@ namespace Ome
                     System.Threading.Thread.Sleep(1000);  // Update every second
                 }
             });
+            UpdateWindowTitle();
         }
 
 
@@ -467,6 +511,7 @@ namespace Ome
                     AudioReaders.Remove(FilePath);
                 }
             }
+            UpdateWindowTitle();
         }
 
 
@@ -581,10 +626,8 @@ namespace Ome
                     }
                 }
             }
+            UpdateWindowTitle();
         }
-
-
-
 
         /// <summary>
         /// Stops all audio playback and disposes of resources when the window is closing.
@@ -651,6 +694,7 @@ namespace Ome
             }
 
             TrackVolumes.Clear();
+            UpdateWindowTitle();
         }
 
 
