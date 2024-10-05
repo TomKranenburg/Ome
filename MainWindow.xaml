@@ -1,7 +1,13 @@
 ﻿<Window x:Class="Ome.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Ome - Ambient Soundscape Mixer" Height="400" MinHeight="250" Background="Black">
+        xmlns:syswin="clr-namespace:System.Windows;assembly=PresentationFramework"
+        Title="Ome - Ambient Soundscape Mixer" 
+        Height="400" 
+        MinHeight="250"
+        SizeToContent="Height"
+        MaxHeight="{x:Static syswin:SystemParameters.MaximizedPrimaryScreenHeight}"
+        Background="Black">
 
     <Window.Resources>
         <!-- Base style for Buttons and ToggleButtons to remove mouse-over highlight and dim on hover -->
@@ -102,7 +108,7 @@
         </StackPanel>
 
         <!-- Main content area for sound buttons -->
-        <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Visible">
             <StackPanel Name="ButtonsPanel" Orientation="Vertical" Margin="10">
             </StackPanel>
         </ScrollViewer>

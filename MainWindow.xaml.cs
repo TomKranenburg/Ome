@@ -23,6 +23,7 @@ namespace Ome
         private Dictionary<string, TextBox> VolumeTextBoxes = new Dictionary<string, TextBox>(); // TextBox for each volume
         private Dictionary<string, ToggleButton> PlayToggleButtons = new Dictionary<string, ToggleButton>();
         private Dictionary<string, Label> LoopCountLabels = new Dictionary<string, Label>();
+        private Dictionary<string, Label> PlaybackPositionLabels = new Dictionary<string, Label>();
 
         public string ConfigFilePath;
         private double GlobalVolume = 0.5;  // Default global volume level (50%)
@@ -43,7 +44,7 @@ namespace Ome
             LoadSoundButtons();
 
             // Adjust window size based on loaded content
-            AdjustWindowHeight();
+            //AdjustWindowHeight();
             AdjustWindowWidth();
 
             // Update the window title to reflect the initial play state
@@ -104,18 +105,15 @@ namespace Ome
             {
                 string baseTitle = "Ome - Ambient Soundscape Mixer";
 
-                // Handle the case when there are no tracks loaded or playing
                 if (PlayingSounds.Count == 0)
                 {
                     this.Title = $"{baseTitle} - Stopped";
                     return;
                 }
 
-                // Determine the play state
                 bool anyPlaying = PlayingSounds.Values.Any(player => player.PlaybackState == PlaybackState.Playing);
                 bool anyPaused = PlayingSounds.Values.Any(player => player.PlaybackState == PlaybackState.Paused);
 
-                // Update the title based on the play state
                 if (anyPlaying)
                 {
                     this.Title = $"{baseTitle} - Playing";
@@ -130,6 +128,7 @@ namespace Ome
                 }
             });
         }
+
 
         /// <summary>
         /// Pauses all currently playing tracks.
@@ -152,7 +151,10 @@ namespace Ome
                 }
             }
 
+            // Update the PlayPauseToggleButton's state
             PlayPauseToggleButton.IsChecked = true;
+
+            // Update the window title
             UpdateWindowTitle();
         }
 
@@ -177,9 +179,11 @@ namespace Ome
                 }
             }
 
+            // Update the PlayPauseToggleButton's state
             PlayPauseToggleButton.IsChecked = false;
-            UpdateWindowTitle();
 
+            // Update the window title
+            UpdateWindowTitle();
         }
         protected override void OnStateChanged(EventArgs e)
         {
@@ -198,6 +202,8 @@ namespace Ome
             if (!Directory.Exists(SoundFolderPath)) return;
 
             ButtonsPanel.Children.Clear(); // Clear existing buttons before reloading
+            PlaybackPositionLabels.Clear(); // Clear existing playback position labels
+            LoopCountLabels.Clear(); // Clear existing loop count labels
 
             var audioFiles = new List<string>();
             audioFiles.AddRange(Directory.GetFiles(SoundFolderPath, "*.flac"));
@@ -211,9 +217,35 @@ namespace Ome
                 // StackPanel for track UI
                 var StackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
 
-                // Label for loop count
-                var LoopCountLabel = new Label { Content = "0000", Foreground = Brushes.White, Width = 40, Margin = new Thickness(5), HorizontalContentAlignment = HorizontalAlignment.Center};
+                // Playback position label
+                var PlaybackPositionLabel = new Label
+                {
+                    Content = "00:00:00",
+                    Foreground = Brushes.White,
+                    Width = 60,
+                    Margin = new Thickness(5),
+                    HorizontalContentAlignment = HorizontalAlignment.Right,
+                    VerticalContentAlignment = VerticalAlignment.Center
+                };
+                StackPanel.Children.Add(PlaybackPositionLabel);
+
+                // Store the playback position label in the dictionary
+                PlaybackPositionLabels[audioFile] = PlaybackPositionLabel;
+
+                // Loop count label
+                var LoopCountLabel = new Label
+                {
+                    Content = "000",
+                    Foreground = Brushes.White,
+                    Width = 30,
+                    Margin = new Thickness(5),
+                    HorizontalContentAlignment = HorizontalAlignment.Center,
+                    VerticalContentAlignment = VerticalAlignment.Center
+                };
                 StackPanel.Children.Add(LoopCountLabel);
+
+                // Store loop count label in a dictionary for updating later
+                LoopCountLabels[audioFile] = LoopCountLabel;
 
                 // Label for track name
                 var FileLabel = new Label { Content = FileName, Foreground = Brushes.White, Width = 150, Margin = new Thickness(5) };
@@ -236,7 +268,14 @@ namespace Ome
                 VolumeSliders[audioFile] = VolumeSlider;
 
                 // TextBox for volume input
-                var VolumeTextBox = new TextBox { Width = 50, Text = "0.500", Margin = new Thickness(5), TextAlignment = TextAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center };
+                var VolumeTextBox = new TextBox
+                {
+                    Width = 50,
+                    Text = "0.50",
+                    Margin = new Thickness(5),
+                    TextAlignment = TextAlignment.Center,
+                    VerticalContentAlignment = VerticalAlignment.Center
+                };
                 VolumeTextBox.Tag = audioFile;
                 VolumeTextBox.TextChanged += VolumeTextBox_TextChanged;
                 StackPanel.Children.Add(VolumeTextBox);
@@ -256,12 +295,8 @@ namespace Ome
 
                 // Add the stack panel for this track to the main panel
                 ButtonsPanel.Children.Add(StackPanel);
-
-                // Store loop count label in a dictionary for updating later
-                LoopCountLabels[audioFile] = LoopCountLabel;  // Add this line to store the loop label
             }
         }
-
 
         /// <summary>
         /// Event handler for volume slider. Updates both the track volume and the corresponding text box.
@@ -403,7 +438,7 @@ namespace Ome
             double buttonWidth = 75;
             double sliderWidth = 100;
             double textBoxWidth = 90;
-            double marginWidth = 200;
+            double marginWidth = 270;
 
             double MaxWidth = labelWidth + buttonWidth + sliderWidth + textBoxWidth + marginWidth;
 
@@ -469,7 +504,7 @@ namespace Ome
             // Store the WasapiOut object in the PlayingSounds dictionary as IWavePlayer
             PlayingSounds[FilePath] = outputDevice;
 
-            // Update loop count periodically
+            // Update loop count and playback position periodically
             Task.Run(() =>
             {
                 while (PlayingSounds.ContainsKey(FilePath))
@@ -478,15 +513,40 @@ namespace Ome
                     {
                         if (LoopStreams.ContainsKey(FilePath))
                         {
-                            LoopCountLabels[FilePath].Content = $"{LoopStreams[FilePath].LoopCount:D4}";
+                            // Update the playback position label
+                            TimeSpan currentTime = LoopStreams[FilePath].CurrentTime;
+                            string formattedTime = currentTime.ToString(@"hh\:mm\:ss");
+                            if (PlaybackPositionLabels.ContainsKey(FilePath))
+                            {
+                                PlaybackPositionLabels[FilePath].Content = formattedTime;
+                            }
+
+                            // Update loop count
+                            int loopCount = LoopStreams[FilePath].LoopCount;
+                            LoopCountLabels[FilePath].Content = loopCount.ToString("D3");
                         }
                     });
-                    System.Threading.Thread.Sleep(1000);  // Update every second
+                    System.Threading.Thread.Sleep(500);  // Update every 500 milliseconds
                 }
+
+                // Reset the labels when the track stops
+                Dispatcher.Invoke(() =>
+                {
+                    if (PlaybackPositionLabels.ContainsKey(FilePath))
+                    {
+                        PlaybackPositionLabels[FilePath].Content = "00:00:00";
+                    }
+
+                    if (LoopCountLabels.ContainsKey(FilePath))
+                    {
+                        LoopCountLabels[FilePath].Content = "000";
+                    }
+                });
             });
+
+            // Update the window title
             UpdateWindowTitle();
         }
-
 
         /// <summary>
         /// Stops playing an audio file.
@@ -496,25 +556,37 @@ namespace Ome
             if (PlayingSounds.ContainsKey(FilePath))
             {
                 PlayingSounds[FilePath].Stop();
-                PlayingSounds[FilePath].Dispose();  // Dispose of the WasapiOut or WaveOutEvent object
+                PlayingSounds[FilePath].Dispose();  // Dispose of the WasapiOut object
                 PlayingSounds.Remove(FilePath);
-
-                if (LoopStreams.ContainsKey(FilePath))
-                {
-                    LoopStreams[FilePath].Dispose();  // Dispose of the LoopStream
-                    LoopStreams.Remove(FilePath);
-                }
-
-                if (AudioReaders.ContainsKey(FilePath))
-                {
-                    AudioReaders[FilePath].Dispose();  // Dispose of the AudioFileReader
-                    AudioReaders.Remove(FilePath);
-                }
             }
+
+            if (LoopStreams.ContainsKey(FilePath))
+            {
+                LoopStreams[FilePath].Dispose();  // Dispose of the LoopStream
+                LoopStreams.Remove(FilePath);
+            }
+
+            if (AudioReaders.ContainsKey(FilePath))
+            {
+                AudioReaders[FilePath].Dispose();  // Dispose of the AudioFileReader
+                AudioReaders.Remove(FilePath);
+            }
+
+            // Reset the playback position label
+            if (PlaybackPositionLabels.ContainsKey(FilePath))
+            {
+                PlaybackPositionLabels[FilePath].Content = "00:00:00";
+            }
+
+            // Reset the loop count label
+            if (LoopCountLabels.ContainsKey(FilePath))
+            {
+                LoopCountLabels[FilePath].Content = "000";
+            }
+
+            // Update the window title
             UpdateWindowTitle();
         }
-
-
 
         /// <summary>
         /// Saves the current configuration (track volumes, window size, play states) to a file.
@@ -670,7 +742,6 @@ namespace Ome
             {
                 toggleButton.IsChecked = false;
                 toggleButton.Content = "Play";
-                toggleButton.Background = Brushes.White;
             }
 
             foreach (var slider in VolumeSliders.Values)
@@ -680,12 +751,17 @@ namespace Ome
 
             foreach (var textBox in VolumeTextBoxes.Values)
             {
-                textBox.Text = "0.500";
+                textBox.Text = "0.50";
             }
 
             foreach (var loopLabel in LoopCountLabels.Values)
             {
-                loopLabel.Content = "0000";  // Reset the loop count display
+                loopLabel.Content = "000";  // Reset the loop count display
+            }
+
+            foreach (var playbackLabel in PlaybackPositionLabels.Values)
+            {
+                playbackLabel.Content = "00:00:00";  // Reset the playback position display
             }
 
             foreach (var loopStream in LoopStreams.Values)
@@ -694,9 +770,10 @@ namespace Ome
             }
 
             TrackVolumes.Clear();
+
+            // Update the window title
             UpdateWindowTitle();
         }
-
 
         /// <summary>
         /// Event handler for the Menu button. Opens the configuration window.
@@ -736,88 +813,67 @@ namespace Ome
     // LoopStream class inherits from WaveStream and is responsible for continuously looping audio.
     public class LoopStream : WaveStream
     {
-        // The sourceStream is the underlying audio stream that will be looped.
         private readonly WaveStream sourceStream;
-
-        // LoopCount keeps track of how many times the audio has looped. It starts at 0.
         public int LoopCount { get; set; } = 0;
 
-        // Constructor that takes a WaveStream (the source audio file) as an argument.
         public LoopStream(WaveStream sourceStream)
         {
-            // Assign the passed-in sourceStream to the class's internal sourceStream.
             this.sourceStream = sourceStream;
         }
 
-        // The WaveFormat property defines the format of the audio data (e.g., sample rate, channels).
-        // We override it to return the WaveFormat of the source stream.
         public override WaveFormat WaveFormat => sourceStream.WaveFormat;
 
-        // The Length property defines the total length of the audio data in bytes.
-        // This property is used by the WaveOutEvent class to understand the size of the audio data.
         public override long Length => sourceStream.Length;
 
-        // The Position property tracks the current read position in the audio stream.
-        // We override it to control and reset the position as needed for looping.
         public override long Position
         {
-            get => sourceStream.Position;  // Get the current position from the source stream
-            set => sourceStream.Position = value;  // Set the position in the source stream
+            get => sourceStream.Position;
+            set => sourceStream.Position = value;
         }
 
-        // The Read method reads audio data from the source stream into the provided buffer.
-        // It loops the audio when the end of the stream is reached.
+        // Expose the current playback time
+        public override TimeSpan CurrentTime
+        {
+            get => sourceStream.CurrentTime;
+            set => sourceStream.CurrentTime = value;
+        }
+
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int totalBytesRead = 0;  // Track how many bytes have been read
+            int totalBytesRead = 0;
 
-            // Keep reading until we've filled the requested number of bytes in the buffer.
             while (totalBytesRead < count)
             {
-                // Read from the sourceStream into the buffer.
                 int bytesRead = sourceStream.Read(buffer, offset + totalBytesRead, count - totalBytesRead);
-                Debug.WriteLine($"Bytes read: {bytesRead}");
-                // If no more bytes can be read (end of stream), check if we should loop.
+
                 if (bytesRead == 0)
                 {
-                    // If the stream has reached the end, reset the position to loop from the start.
-                    //if (sourceStream.Position == sourceStream.Length)
-                    //{
-                        Debug.WriteLine($"Looping: {sourceStream}");
-                        sourceStream.Position = 0;  // Loop back to the start of the stream
-                        LoopCount++;  // Increment the loop count to track how many times we've looped
-                    //}
+                    sourceStream.Position = 0;
+                    LoopCount++;
                 }
 
-                // Add the bytes read in this iteration to the total bytes read.
                 totalBytesRead += bytesRead;
 
-                // If no bytes were read and we're not at the beginning, break the loop to avoid infinite looping.
-                //if (bytesRead == 0 && sourceStream.Position == 0)
+                // Prevent infinite loop if no data is read
+                //if (bytesRead == 0)
                 //{
                     //break;
                 //}
             }
 
-            // Return the total number of bytes that were read into the buffer.
             return totalBytesRead;
         }
 
-        // Dispose method is called to release resources when the stream is no longer needed.
-        // Here, we ensure that the sourceStream is also disposed to free any associated resources.
         protected override void Dispose(bool disposing)
         {
-            // Check if we are disposing of managed resources.
             if (disposing)
             {
-                // Dispose of the underlying sourceStream to release file handles and memory.
                 sourceStream.Dispose();
             }
-
-            // Call the base class Dispose method to clean up the WaveStream.
             base.Dispose(disposing);
         }
     }
+
 
 
 
