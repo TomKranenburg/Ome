@@ -271,7 +271,7 @@ namespace Ome
                 var VolumeTextBox = new TextBox
                 {
                     Width = 50,
-                    Text = "0.50",
+                    Text = "0.500",
                     Margin = new Thickness(5),
                     TextAlignment = TextAlignment.Center,
                     VerticalContentAlignment = VerticalAlignment.Center
@@ -742,6 +742,7 @@ namespace Ome
             {
                 toggleButton.IsChecked = false;
                 toggleButton.Content = "Play";
+                toggleButton.Background = Brushes.White;
             }
 
             foreach (var slider in VolumeSliders.Values)
@@ -751,7 +752,7 @@ namespace Ome
 
             foreach (var textBox in VolumeTextBoxes.Values)
             {
-                textBox.Text = "0.50";
+                textBox.Text = "0.500";
             }
 
             foreach (var loopLabel in LoopCountLabels.Values)
