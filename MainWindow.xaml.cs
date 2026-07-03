@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -103,28 +105,33 @@ namespace Ome
         {
             Dispatcher.Invoke(() =>
             {
-                string baseTitle = "Ome - Ambient Soundscape Mixer";
+                string BaseTitle = "Ome - Ambient Soundscape Mixer";
 
                 if (PlayingSounds.Count == 0)
                 {
-                    this.Title = $"{baseTitle} - Stopped";
+                    this.Title = $"{BaseTitle} - Stopped";
                     return;
                 }
 
-                bool anyPlaying = PlayingSounds.Values.Any(player => player.PlaybackState == PlaybackState.Playing);
-                bool anyPaused = PlayingSounds.Values.Any(player => player.PlaybackState == PlaybackState.Paused);
+                bool AnyPlaying = PlayingSounds.Values.Any(player => player.PlaybackState == PlaybackState.Playing);
+                bool AnyPaused = PlayingSounds.Values.Any(player => player.PlaybackState == PlaybackState.Paused);
 
-                if (anyPlaying)
+                // Check if any loaded track has "The Mile" in the filename/path
+                bool IsPlayingTheMile = PlayingSounds.Any(kvp => kvp.Key.IndexOf("The Mile", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                string TheMileSuffix = IsPlayingTheMile ? " - The Mile" : "";
+
+                if (AnyPlaying)
                 {
-                    this.Title = $"{baseTitle} - Playing";
+                    this.Title = $"{BaseTitle} - Playing{TheMileSuffix}";
                 }
-                else if (anyPaused)
+                else if (AnyPaused)
                 {
-                    this.Title = $"{baseTitle} - Paused";
+                    this.Title = $"{BaseTitle} - Paused{TheMileSuffix}";
                 }
                 else
                 {
-                    this.Title = $"{baseTitle} - Stopped";
+                    this.Title = $"{BaseTitle} - Stopped";
                 }
             });
         }
@@ -185,6 +192,7 @@ namespace Ome
             // Update the window title
             UpdateWindowTitle();
         }
+
         protected override void OnStateChanged(EventArgs e)
         {
             base.OnStateChanged(e);
@@ -194,6 +202,7 @@ namespace Ome
                 this.ShowActivated = false;
             }
         }
+
         /// <summary>
         /// Loads the audio files (flac, mp3, wav) into the UI as buttons with volume sliders and text boxes.
         /// </summary>
@@ -443,7 +452,7 @@ namespace Ome
             double MaxWidth = labelWidth + buttonWidth + sliderWidth + textBoxWidth + marginWidth;
 
             this.Width = MaxWidth;
-            
+
         }
 
         /// <summary>
@@ -858,7 +867,7 @@ namespace Ome
                 // Prevent infinite loop if no data is read
                 //if (bytesRead == 0)
                 //{
-                    //break;
+                //break;
                 //}
             }
 
@@ -874,8 +883,5 @@ namespace Ome
             base.Dispose(disposing);
         }
     }
-
-
-
 
 }
