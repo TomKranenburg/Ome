@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,34 +12,44 @@ namespace Ome
     public partial class App : Application
     {
         private const string PipeName = "OmeAudioAppPipe";
-        private Mutex _mutex;
+        private Mutex? _mutex;
+        private bool _ownsMutex;
+
         public bool NoFocus { get; private set; } = false;
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            bool isNewInstance;
-            _mutex = new Mutex(true, "OmeAudioAppMutex", out isNewInstance);
+            _mutex = new Mutex(true, "OmeAudioAppMutex", out _ownsMutex);
 
-            if (isNewInstance)
+            if (_ownsMutex)
             {
-                // Start the named pipe server for communication
-
                 if (e.Args.Contains("--no-focus") || e.Args.Contains("-nf"))
                 {
                     this.NoFocus = true;
                 }
 
-                Debug.WriteLine($"No running instance detected");
+                Debug.WriteLine("No running instance detected");
                 StartNamedPipeServer();
                 base.OnStartup(e); // Proceed with normal startup
             }
             else
             {
                 // Another instance is already running; pass the arguments to it and exit
-                Debug.WriteLine($"Running instance detected");
+                Debug.WriteLine("Running instance detected");
                 SendCommandLineArgsToRunningInstance(e.Args);
                 Shutdown(); // Exit this new instance
             }
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            if (_mutex != null)
+            {
+                if (_ownsMutex) _mutex.ReleaseMutex();
+                _mutex.Dispose();
+                _mutex = null;
+            }
+            base.OnExit(e);
         }
 
         /// <summary>
@@ -49,7 +58,7 @@ namespace Ome
         /// <param name="args">Command-line arguments.</param>
         private void SendCommandLineArgsToRunningInstance(string[] args)
         {
-            Debug.WriteLine($"Sending command-line arguments to running instance");
+            Debug.WriteLine("Sending command-line arguments to running instance");
             try
             {
                 using (var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out))
@@ -60,7 +69,7 @@ namespace Ome
                     {
                         writer.AutoFlush = true;
                         // Join arguments with quotes around those that contain spaces
-                        var formattedArgs = string.Join(" ", args.Select(arg => arg.Contains(" ") ? $"\"{arg}\"" : arg));
+                        var formattedArgs = string.Join(" ", args.Select(arg => arg.Contains(' ') ? $"\"{arg}\"" : arg));
                         writer.WriteLine(formattedArgs);
                     }
                 }
@@ -93,10 +102,11 @@ namespace Ome
 
                                 if (!string.IsNullOrEmpty(args))
                                 {
-                                    string executablePath = Assembly.GetExecutingAssembly().Location;
-                                    // Prepend the executable path to the args string
-                                    string[] parsedArgs = ParseArguments(args);
-                                    parsedArgs = (new string[] { executablePath }).Concat(parsedArgs).ToArray();
+                                    // Environment.ProcessPath works under single-file publish,
+                                    // where Assembly.GetExecutingAssembly().Location is empty.
+                                    var executablePath = Environment.ProcessPath ?? string.Empty;
+                                    var parsedArgs = ParseArguments(args);
+                                    parsedArgs = new[] { executablePath }.Concat(parsedArgs).ToArray();
                                     Application.Current.Dispatcher.Invoke(() => ProcessCommandLineArgs(parsedArgs));
                                 }
                             }
@@ -115,11 +125,11 @@ namespace Ome
         /// </summary>
         /// <param name="input">The raw input string.</param>
         /// <returns>An array of parsed arguments.</returns>
-        private string[] ParseArguments(string input)
+        private static string[] ParseArguments(string input)
         {
             var args = new List<string>();
             var currentArg = new System.Text.StringBuilder();
-            bool insideQuotes = false;
+            var insideQuotes = false;
 
             foreach (var c in input)
             {

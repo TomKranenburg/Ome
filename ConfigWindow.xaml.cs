@@ -1,13 +1,32 @@
-﻿using System;
+using System;
 using System.Windows;
 
 namespace Ome
 {
     public partial class ConfigWindow : Window
     {
+        private bool _initializing;
+
         public ConfigWindow()
         {
             InitializeComponent();
+
+            // Owner is assigned after construction but before ShowDialog, so read
+            // its state in Loaded. The flag stops the programmatic IsChecked
+            // assignment from firing the Changed handler.
+            Loaded += (s, e) =>
+            {
+                _initializing = true;
+                ReplayGainCheckBox.IsChecked = (Owner as MainWindow)?.UseReplayGain ?? false;
+                _initializing = false;
+            };
+        }
+
+        // Event handler for the ReplayGain checkbox (fires for both check and uncheck)
+        private void ReplayGainCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_initializing) return;
+            (Owner as MainWindow)?.SetReplayGainEnabled(ReplayGainCheckBox.IsChecked == true);
         }
 
         // Event handler for the Load Config button

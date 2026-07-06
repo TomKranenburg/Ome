@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -7,44 +7,29 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>ome-logo.ico</ApplicationIcon>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);/debug:none</DefineConstants>
     <DebugType>none</DebugType>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>none</DebugType>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="images\pause.png" />
-    <None Remove="images\play.png" />
-    <None Remove="menu-logo.png" />
-  </ItemGroup>
 
   <ItemGroup>
     <Resource Include="menu-logo.png" />
-    <Content Include="ome-logo.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="NAudio" Version="2.2.1" />
-    <PackageReference Include="NAudio.Flac" Version="1.0.5702.29018" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="TagLibSharp" Version="2.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Resource Include="menu.png" />
     <Resource Include="pause.png" />
     <Resource Include="play.png" />
     <Resource Include="reset.png" />
+    <Content Include="ome-logo.ico" />
   </ItemGroup>
 
+  <!--
+    Runtime dependencies:
+    - NAudio: playback, mixing, decoding. (NAudio.Flac stays gone; FLAC decodes via
+      AudioFileReader's MediaFoundationReader fallback, shipped with Windows 10 1607+.)
+    - TagLibSharp: reads ReplayGain tags (FLAC Vorbis comments, MP3 ID3v2/APEv2).
+      The original project referenced it without using it; now it earns its keep.
+    - Newtonsoft.Json stays replaced by System.Text.Json, which is part of the runtime.
+  -->
   <ItemGroup>
-    <Folder Include="images\" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
   </ItemGroup>
 
 </Project>
