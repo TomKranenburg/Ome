@@ -1,5 +1,5 @@
 (CAUTION: Originally written entirely by ChatGPT-4o in 2024. Optimised, extended,
-and re-documented by Claude (Anthropic) in 2026 — see `CHANGELOG.md` for
+and re-documented by Claude Fable (Anthropic) in 2026 — see `CHANGELOG.md` for
 everything that changed and `OPTIMIZATIONS.md` for the design rationale.)
 
 <div align="center">
